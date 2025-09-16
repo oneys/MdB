@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form, Depends, Cookie, Response, Request
+from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.security import HTTPBearer
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
@@ -10,11 +11,14 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
 import io
 import json
+import hashlib
+import secrets
+import aiohttp
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -38,6 +42,9 @@ app = FastAPI(title="Marchands de Biens API", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Security
+security = HTTPBearer(auto_error=False)
 
 # Enums
 class RegimeTVA(str, Enum):
@@ -66,6 +73,37 @@ class FileCategory(str, Enum):
     TECHNIQUE = "TECHNIQUE"
     FINANCIER = "FINANCIER"
     ADMINISTRATIF = "ADMINISTRATIF"
+
+class UserRole(str, Enum):
+    OWNER = "OWNER"
+    PM = "PM" 
+    ANALYSTE = "ANALYSTE"
+    INVITE = "INVITE"
+
+# Authentication Models
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: str
+    name: str
+    picture: Optional[str] = None
+    role: UserRole = UserRole.ANALYSTE
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_active: bool = True
+
+class UserSession(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    session_token: str
+    expires_at: datetime
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SessionData(BaseModel):
+    id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
+    session_token: str
 
 # Models
 class EstimateInput(BaseModel):
@@ -161,6 +199,8 @@ class Project(BaseModel):
     flags: Dict[str, bool] = Field(default_factory=dict)
     milestones: Dict[str, Optional[str]] = Field(default_factory=dict)
     financing: Dict[str, Any] = Field(default_factory=dict)
+    owner_id: Optional[str] = None
+    team_members: List[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -184,6 +224,152 @@ class ProjectUpdate(BaseModel):
     frais_agence_ttc: Optional[float] = None
     milestones: Optional[Dict[str, Optional[str]]] = None
     financing: Optional[Dict[str, Any]] = None
+
+# Authentication Service
+class AuthenticationService:
+    @staticmethod
+    async def get_session_data_from_emergent(session_id: str) -> Optional[SessionData]:
+        """Get user session data from Emergent auth service"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {"X-Session-ID": session_id}
+                url = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+                
+                async with session.get(url, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return SessionData(**data)
+                    return None
+        except Exception as e:
+            logging.error(f"Error getting session data: {e}")
+            return None
+
+    @staticmethod
+    async def create_or_get_user(session_data: SessionData) -> User:
+        """Create or retrieve user from database"""
+        # Check if user exists
+        existing_user = await db.users.find_one({"email": session_data.email})
+        if existing_user:
+            return User(**existing_user)
+        
+        # Create new user
+        user = User(
+            email=session_data.email,
+            name=session_data.name,
+            picture=session_data.picture,
+            role=UserRole.ANALYSTE  # Default role
+        )
+        await db.users.insert_one(user.dict())
+        return user
+
+    @staticmethod
+    async def create_user_session(user_id: str, session_token: str) -> UserSession:
+        """Store user session in database"""
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        session = UserSession(
+            user_id=user_id,
+            session_token=session_token,
+            expires_at=expires_at
+        )
+        await db.user_sessions.insert_one(session.dict())
+        return session
+
+    @staticmethod
+    async def get_user_from_session_token(session_token: str) -> Optional[User]:
+        """Validate session token and return user"""
+        if not session_token:
+            return None
+        
+        # Find valid session
+        session = await db.user_sessions.find_one({
+            "session_token": session_token,
+            "expires_at": {"$gt": datetime.now(timezone.utc)}
+        })
+        
+        if not session:
+            return None
+        
+        # Get user
+        user = await db.users.find_one({"id": session["user_id"]})
+        if not user:
+            return None
+        
+        return User(**user)
+
+    @staticmethod
+    async def logout_user(session_token: str) -> bool:
+        """Delete user session"""
+        result = await db.user_sessions.delete_one({"session_token": session_token})
+        return result.deleted_count > 0
+
+# Authentication dependency
+async def get_current_user(
+    request: Request,
+    session_token: Optional[str] = Cookie(None, alias="session_token")
+) -> Optional[User]:
+    """Get current authenticated user from session token (cookie or header)"""
+    
+    # Try cookie first
+    if not session_token:
+        # Fallback to Authorization header
+        auth_header = request.headers.get("authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            session_token = auth_header.split(" ")[1]
+    
+    if not session_token:
+        return None
+    
+    return await AuthenticationService.get_user_from_session_token(session_token)
+
+async def require_auth(current_user: User = Depends(get_current_user)) -> User:
+    """Require authentication"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return current_user
+
+async def require_role(required_roles: List[UserRole]):
+    """Factory for role-based access control"""
+    async def role_checker(current_user: User = Depends(require_auth)) -> User:
+        if current_user.role not in required_roles:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        return current_user
+    return role_checker
+
+# Project access control
+async def get_accessible_projects(user: User) -> List[str]:
+    """Get project IDs accessible to user based on role"""
+    if user.role == UserRole.OWNER:
+        # Owner sees all projects
+        projects = await db.projects.find({}, {"id": 1}).to_list(1000)
+        return [p["id"] for p in projects]
+    elif user.role == UserRole.PM:
+        # PM sees owned projects + projects where they're team member
+        projects = await db.projects.find(
+            {"$or": [
+                {"owner_id": user.id},
+                {"team_members": user.id}
+            ]},
+            {"id": 1}
+        ).to_list(1000)
+        return [p["id"] for p in projects]
+    else:
+        # Analyst and Guest see projects where they're team member
+        projects = await db.projects.find(
+            {"team_members": user.id},
+            {"id": 1}
+        ).to_list(1000)
+        return [p["id"] for p in projects]
+
+async def check_project_access(project_id: str, user: User, required_permission: str = "read"):
+    """Check if user has access to specific project"""
+    accessible_projects = await get_accessible_projects(user)
+    if project_id not in accessible_projects:
+        raise HTTPException(status_code=403, detail="Access denied to this project")
+    
+    # Check write permissions
+    if required_permission == "write":
+        if user.role == UserRole.INVITE:
+            raise HTTPException(status_code=403, detail="Read-only access")
 
 # Tax calculation service (unchanged)
 class TaxCalculationService:
@@ -347,7 +533,7 @@ class TaxCalculationService:
             explain="\n".join(explains)
         )
 
-# PDF Generation Service
+# PDF Generation Service (unchanged)
 class PDFGenerationService:
     @staticmethod
     def generate_bank_dossier(project: Project, estimate: EstimateOutput) -> io.BytesIO:
@@ -475,13 +661,103 @@ class PDFGenerationService:
 # Initialize services
 tax_service = TaxCalculationService()
 pdf_service = PDFGenerationService()
+auth_service = AuthenticationService()
 
 # API Routes
+
 @api_router.get("/")
 async def root():
     return {"message": "Marchands de Biens API", "version": "1.0.0"}
 
-# Estimator endpoints
+# Authentication endpoints
+@api_router.post("/auth/session")
+async def create_session(
+    response: Response,
+    session_id: str = Form(...),
+):
+    """Process session ID from Emergent Auth and create user session"""
+    try:
+        # Get session data from Emergent
+        session_data = await auth_service.get_session_data_from_emergent(session_id)
+        if not session_data:
+            raise HTTPException(status_code=400, detail="Invalid session ID")
+        
+        # Create or get user
+        user = await auth_service.create_or_get_user(session_data)
+        
+        # Create user session
+        user_session = await auth_service.create_user_session(user.id, session_data.session_token)
+        
+        # Set httpOnly cookie
+        response.set_cookie(
+            key="session_token",
+            value=session_data.session_token,
+            max_age=7*24*60*60,  # 7 days
+            httponly=True,
+            secure=True,
+            samesite="none",
+            path="/"
+        )
+        
+        return {
+            "user": user.dict(),
+            "session_expires": user_session.expires_at.isoformat()
+        }
+        
+    except Exception as e:
+        logging.error(f"Session creation error: {e}")
+        raise HTTPException(status_code=500, detail="Session creation failed")
+
+@api_router.get("/auth/me")
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Get current user information"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return current_user.dict()
+
+@api_router.post("/auth/logout")
+async def logout(
+    response: Response,
+    session_token: Optional[str] = Cookie(None, alias="session_token")
+):
+    """Logout user and clear session"""
+    if session_token:
+        await auth_service.logout_user(session_token)
+    
+    response.delete_cookie(
+        key="session_token",
+        path="/",
+        secure=True,
+        samesite="none"
+    )
+    
+    return {"message": "Logged out successfully"}
+
+# User management endpoints
+@api_router.get("/users", response_model=List[User])
+async def get_users(current_user: User = Depends(require_role([UserRole.OWNER, UserRole.PM]))):
+    """Get all users (Owner and PM only)"""
+    users = await db.users.find().to_list(1000)
+    return [User(**user) for user in users]
+
+@api_router.put("/users/{user_id}/role")
+async def update_user_role(
+    user_id: str,
+    role: UserRole,
+    current_user: User = Depends(require_role([UserRole.OWNER]))
+):
+    """Update user role (Owner only)"""
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"role": role.value, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": f"User role updated to {role.value}"}
+
+# Estimator endpoints (public access for demo)
 @api_router.post("/estimate/run", response_model=EstimateOutput)
 async def run_estimate(inputs: EstimateInput):
     try:
@@ -499,15 +775,28 @@ async def run_estimate(inputs: EstimateInput):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erreur de calcul: {str(e)}")
 
-# Project endpoints
+# Project endpoints (protected)
 @api_router.get("/projects", response_model=List[Project])
-async def get_projects():
-    projects = await db.projects.find().to_list(1000)
+async def get_projects(current_user: User = Depends(require_auth)):
+    """Get projects accessible to current user"""
+    accessible_project_ids = await get_accessible_projects(current_user)
+    
+    if not accessible_project_ids:
+        return []
+    
+    projects = await db.projects.find({"id": {"$in": accessible_project_ids}}).to_list(1000)
     return [Project(**project) for project in projects]
 
 @api_router.post("/projects", response_model=Project)
-async def create_project(project_data: ProjectCreate):
+async def create_project(
+    project_data: ProjectCreate,
+    current_user: User = Depends(require_role([UserRole.OWNER, UserRole.PM]))
+):
+    """Create new project (Owner and PM only)"""
     project_dict = project_data.dict()
+    project_dict["owner_id"] = current_user.id
+    project_dict["team_members"] = [current_user.id]
+    
     project = Project(**project_dict)
     await db.projects.insert_one(project.dict())
     
@@ -516,21 +805,31 @@ async def create_project(project_data: ProjectCreate):
         project_id=project.id,
         event_type="project_created",
         description=f"Projet '{project.label}' créé",
-        user="system"
+        user=current_user.name
     )
     await db.project_events.insert_one(event.dict())
     
     return project
 
 @api_router.get("/projects/{project_id}", response_model=Project)
-async def get_project(project_id: str):
+async def get_project(project_id: str, current_user: User = Depends(require_auth)):
+    """Get specific project"""
+    await check_project_access(project_id, current_user, "read")
+    
     project = await db.projects.find_one({"id": project_id})
     if not project:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
     return Project(**project)
 
 @api_router.put("/projects/{project_id}", response_model=Project)
-async def update_project(project_id: str, update_data: ProjectUpdate):
+async def update_project(
+    project_id: str, 
+    update_data: ProjectUpdate,
+    current_user: User = Depends(require_auth)
+):
+    """Update project"""
+    await check_project_access(project_id, current_user, "write")
+    
     update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
     update_dict["updated_at"] = datetime.now(timezone.utc)
     
@@ -544,7 +843,7 @@ async def update_project(project_id: str, update_data: ProjectUpdate):
         event_type="project_updated",
         description="Projet mis à jour",
         metadata=update_dict,
-        user="system"
+        user=current_user.name
     )
     await db.project_events.insert_one(event.dict())
     
@@ -553,12 +852,20 @@ async def update_project(project_id: str, update_data: ProjectUpdate):
 
 # Task endpoints
 @api_router.get("/projects/{project_id}/tasks", response_model=List[Task])
-async def get_project_tasks(project_id: str):
+async def get_project_tasks(project_id: str, current_user: User = Depends(require_auth)):
+    await check_project_access(project_id, current_user, "read")
+    
     tasks = await db.tasks.find({"project_id": project_id}).to_list(1000)
     return [Task(**task) for task in tasks]
 
 @api_router.post("/projects/{project_id}/tasks", response_model=Task)
-async def create_task(project_id: str, task_data: TaskCreate):
+async def create_task(
+    project_id: str, 
+    task_data: TaskCreate,
+    current_user: User = Depends(require_auth)
+):
+    await check_project_access(project_id, current_user, "write")
+    
     task_dict = task_data.dict()
     task_dict["project_id"] = project_id
     task = Task(**task_dict)
@@ -569,7 +876,7 @@ async def create_task(project_id: str, task_data: TaskCreate):
         project_id=project_id,
         event_type="task_created",
         description=f"Tâche '{task.title}' créée", 
-        user="system"
+        user=current_user.name
     )
     await db.project_events.insert_one(event.dict())
     
@@ -577,12 +884,20 @@ async def create_task(project_id: str, task_data: TaskCreate):
 
 # Budget endpoints
 @api_router.get("/projects/{project_id}/budget", response_model=List[BudgetItem])
-async def get_project_budget(project_id: str):
+async def get_project_budget(project_id: str, current_user: User = Depends(require_auth)):
+    await check_project_access(project_id, current_user, "read")
+    
     budget_items = await db.budget_items.find({"project_id": project_id}).to_list(1000)
     return [BudgetItem(**item) for item in budget_items]
 
 @api_router.post("/projects/{project_id}/budget", response_model=BudgetItem)
-async def create_budget_item(project_id: str, budget_data: BudgetItemCreate):
+async def create_budget_item(
+    project_id: str, 
+    budget_data: BudgetItemCreate,
+    current_user: User = Depends(require_auth)
+):
+    await check_project_access(project_id, current_user, "write")
+    
     budget_dict = budget_data.dict()
     budget_dict["project_id"] = project_id
     budget_item = BudgetItem(**budget_dict)
@@ -595,8 +910,11 @@ async def create_budget_item(project_id: str, budget_data: BudgetItemCreate):
 async def upload_file(
     project_id: str,
     category: FileCategory = Form(...),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_auth)
 ):
+    await check_project_access(project_id, current_user, "write")
+    
     try:
         # Store file in GridFS
         file_content = await file.read()
@@ -607,7 +925,8 @@ async def upload_file(
                 "project_id": project_id,
                 "category": category.value,
                 "content_type": file.content_type,
-                "original_filename": file.filename
+                "original_filename": file.filename,
+                "uploaded_by": current_user.id
             }
         )
         
@@ -619,6 +938,7 @@ async def upload_file(
             content_type=file.content_type,
             category=category,
             project_id=project_id,
+            uploaded_by=current_user.id,
             gridfs_id=str(gridfs_id)
         )
         await db.project_files.insert_one(project_file.dict())
@@ -628,7 +948,7 @@ async def upload_file(
             project_id=project_id,
             event_type="file_uploaded", 
             description=f"Fichier '{file.filename}' uploadé dans {category.value}",
-            user="system"
+            user=current_user.name
         )
         await db.project_events.insert_one(event.dict())
         
@@ -638,19 +958,25 @@ async def upload_file(
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload: {str(e)}")
 
 @api_router.get("/projects/{project_id}/files", response_model=List[ProjectFile])
-async def get_project_files(project_id: str):
+async def get_project_files(project_id: str, current_user: User = Depends(require_auth)):
+    await check_project_access(project_id, current_user, "read")
+    
     files = await db.project_files.find({"project_id": project_id}).to_list(1000)
     return [ProjectFile(**file) for file in files]
 
 # Events endpoints  
 @api_router.get("/projects/{project_id}/events", response_model=List[ProjectEvent])
-async def get_project_events(project_id: str):
+async def get_project_events(project_id: str, current_user: User = Depends(require_auth)):
+    await check_project_access(project_id, current_user, "read")
+    
     events = await db.project_events.find({"project_id": project_id}).sort("timestamp", DESCENDING).to_list(1000)
     return [ProjectEvent(**event) for event in events]
 
 # PDF Export endpoints
 @api_router.get("/projects/{project_id}/export/bank")
-async def export_bank_dossier(project_id: str):
+async def export_bank_dossier(project_id: str, current_user: User = Depends(require_auth)):
+    await check_project_access(project_id, current_user, "read")
+    
     project = await db.projects.find_one({"id": project_id})
     if not project:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
@@ -687,7 +1013,9 @@ async def export_bank_dossier(project_id: str):
     )
 
 @api_router.get("/projects/{project_id}/export/notaire")
-async def export_notaire_dossier(project_id: str):
+async def export_notaire_dossier(project_id: str, current_user: User = Depends(require_auth)):
+    await check_project_access(project_id, current_user, "read")
+    
     project = await db.projects.find_one({"id": project_id})
     if not project:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
