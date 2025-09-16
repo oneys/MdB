@@ -1,17 +1,28 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
+from pymongo import ASCENDING, DESCENDING
 import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
-import json
 from enum import Enum
+import io
+import json
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.pdfbase import pdfutils
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -20,6 +31,7 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+fs = AsyncIOMotorGridFSBucket(db)
 
 # Create the main app without a prefix
 app = FastAPI(title="Marchands de Biens API", version="1.0.0")
@@ -43,6 +55,18 @@ class ProjectStatus(str, Enum):
     REVENTE = "REVENTE"
     CLOS = "CLOS"
 
+class TaskStatus(str, Enum):
+    A_FAIRE = "A_FAIRE"
+    EN_COURS = "EN_COURS"
+    TERMINE = "TERMINE"
+    EN_RETARD = "EN_RETARD"
+
+class FileCategory(str, Enum):
+    JURIDIQUE = "JURIDIQUE"
+    TECHNIQUE = "TECHNIQUE"
+    FINANCIER = "FINANCIER"
+    ADMINISTRATIF = "ADMINISTRATIF"
+
 # Models
 class EstimateInput(BaseModel):
     dept: str = Field(..., description="Code département (ex: 75)")
@@ -65,6 +89,63 @@ class EstimateOutput(BaseModel):
     tri: float = Field(..., description="Taux de rentabilité interne")
     explain: str = Field(..., description="Détail des calculs")
 
+class Task(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    title: str
+    description: Optional[str] = ""
+    status: TaskStatus = TaskStatus.A_FAIRE
+    assigned_to: Optional[str] = None
+    due_date: Optional[datetime] = None
+    completed_date: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class TaskCreate(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    assigned_to: Optional[str] = None
+    due_date: Optional[datetime] = None
+
+class BudgetItem(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    category: str
+    subcategory: Optional[str] = None
+    description: str
+    montant_prevu_ht: float
+    montant_reel_ht: float = 0
+    tva_rate: float = 0.20
+    status: str = "prevu"  # prevu, engage, facture, paye
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BudgetItemCreate(BaseModel):
+    category: str
+    subcategory: Optional[str] = None
+    description: str
+    montant_prevu_ht: float
+    tva_rate: float = 0.20
+
+class ProjectFile(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    original_filename: str
+    file_size: int
+    content_type: str
+    category: FileCategory
+    project_id: str
+    uploaded_by: Optional[str] = None
+    upload_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    gridfs_id: Optional[str] = None
+
+class ProjectEvent(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    event_type: str
+    description: str
+    user: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class Project(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     label: str
@@ -75,9 +156,13 @@ class Project(BaseModel):
     prix_vente_ttc: float = 0
     travaux_ttc: float = 0
     frais_agence_ttc: float = 0
+    marge_estimee: float = 0
+    tri_estime: float = 0
     flags: Dict[str, bool] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    milestones: Dict[str, Optional[str]] = Field(default_factory=dict)
+    financing: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProjectCreate(BaseModel):
     label: str
@@ -88,32 +173,36 @@ class ProjectCreate(BaseModel):
     travaux_ttc: float = 0
     frais_agence_ttc: float = 0
 
-# Tax calculation service
+class ProjectUpdate(BaseModel):
+    label: Optional[str] = None
+    address: Optional[Dict[str, str]] = None
+    status: Optional[ProjectStatus] = None
+    regime_tva: Optional[RegimeTVA] = None
+    prix_achat_ttc: Optional[float] = None
+    prix_vente_ttc: Optional[float] = None
+    travaux_ttc: Optional[float] = None
+    frais_agence_ttc: Optional[float] = None
+    milestones: Optional[Dict[str, Optional[str]]] = None
+    financing: Optional[Dict[str, Any]] = None
+
+# Tax calculation service (unchanged)
 class TaxCalculationService:
     def __init__(self):
         self.dmto_rates = self._load_dmto_rates()
         self.notaire_baremes = self._load_notaire_baremes()
     
     def _load_dmto_rates(self):
-        """Charge les taux DMTO par département"""
         return {
             "defaults": {"dmto_rate": 0.045, "dmto_mdb_rate": 0.00715},
             "departments": {
-                "75": {"dmto_rate": 0.045},
-                "92": {"dmto_rate": 0.045},
-                "93": {"dmto_rate": 0.045},
-                "94": {"dmto_rate": 0.045},
-                "95": {"dmto_rate": 0.045},
-                "69": {"dmto_rate": 0.045},
-                "13": {"dmto_rate": 0.045},
-                "33": {"dmto_rate": 0.045},
-                "59": {"dmto_rate": 0.045},
+                "75": {"dmto_rate": 0.045}, "92": {"dmto_rate": 0.045}, "93": {"dmto_rate": 0.045},
+                "94": {"dmto_rate": 0.045}, "95": {"dmto_rate": 0.045}, "69": {"dmto_rate": 0.045},
+                "13": {"dmto_rate": 0.045}, "33": {"dmto_rate": 0.045}, "59": {"dmto_rate": 0.045},
                 "31": {"dmto_rate": 0.045}
             }
         }
     
     def _load_notaire_baremes(self):
-        """Charge les barèmes notaire 2025"""
         return {
             "version": "2025-01-01",
             "emoluments_tranches": [
@@ -127,7 +216,6 @@ class TaxCalculationService:
         }
     
     def _decimal_round(self, value: float, places: int = 2) -> float:
-        """Arrondi bancaire"""
         if value is None:
             return 0.0
         decimal_value = Decimal(str(value))
@@ -135,7 +223,6 @@ class TaxCalculationService:
         return float(rounded)
     
     def calculate_dmto(self, prix_achat_ttc: float, dept: str, md_b_eligible: bool = False) -> tuple[float, str]:
-        """Calcule les droits de mutation"""
         dept_config = self.dmto_rates["departments"].get(dept, self.dmto_rates["defaults"])
         
         if md_b_eligible:
@@ -150,12 +237,10 @@ class TaxCalculationService:
         return dmto, explain
     
     def calculate_notaire_fees(self, prix_achat_ttc: float) -> tuple[float, float, float, str]:
-        """Calcule émoluments + CSI + débours"""
         emoluments = 0.0
         reste = prix_achat_ttc
         explain_parts = []
         
-        # Calcul par tranches
         for tranche in self.notaire_baremes["emoluments_tranches"]:
             if reste <= 0:
                 break
@@ -165,13 +250,11 @@ class TaxCalculationService:
             taux = tranche["taux"]
             
             if max_val is None:
-                # Dernière tranche
                 montant_tranche = reste * taux
                 emoluments += montant_tranche
                 explain_parts.append(f"Au-delà de {min_val:,.0f} €: {reste:,.2f} € × {taux:.3%} = {montant_tranche:,.2f} €")
                 reste = 0
             else:
-                # Tranche intermédiaire
                 montant_applicable = min(reste, max_val - min_val)
                 montant_tranche = montant_applicable * taux
                 emoluments += montant_tranche
@@ -189,19 +272,16 @@ class TaxCalculationService:
         return emoluments, csi, debours, explain
     
     def calculate_tva(self, inputs: EstimateInput) -> tuple[float, float, str]:
-        """Calcule TVA selon le régime"""
         tva_collectee = 0.0
         tva_marge = 0.0
         explain = ""
         
         if inputs.regime_tva == RegimeTVA.NORMAL:
-            # TVA normale sur le prix de vente
             prix_vente_ht = inputs.prix_vente_ttc / 1.20
             tva_collectee = inputs.prix_vente_ttc - prix_vente_ht
             explain = f"TVA normale: {inputs.prix_vente_ttc:,.2f} € TTC → {prix_vente_ht:,.2f} € HT\nTVA collectée: {tva_collectee:,.2f} €"
             
         elif inputs.regime_tva == RegimeTVA.MARGE:
-            # TVA sur marge
             total_couts = inputs.prix_achat_ttc + inputs.travaux_ttc + inputs.frais_agence_ttc
             if inputs.prix_vente_ttc > total_couts:
                 marge_ttc = inputs.prix_vente_ttc - total_couts
@@ -219,31 +299,25 @@ class TaxCalculationService:
         return self._decimal_round(tva_collectee), self._decimal_round(tva_marge), explain
     
     def calculate_estimate(self, inputs: EstimateInput) -> EstimateOutput:
-        """Calcul complet de l'estimation"""
         explains = []
         
-        # 1. DMTO
         md_b_eligible = inputs.hypotheses.get("md_b_0715_ok", False)
         dmto, dmto_explain = self.calculate_dmto(inputs.prix_achat_ttc, inputs.dept, md_b_eligible)
         explains.append(f"1. DROITS DE MUTATION:\n{dmto_explain}")
         
-        # 2. Frais notaire
         emoluments, csi, debours, notaire_explain = self.calculate_notaire_fees(inputs.prix_achat_ttc)
         explains.append(f"\n2. FRAIS NOTAIRE:\n{notaire_explain}")
         
-        # 3. TVA
         tva_collectee, tva_marge, tva_explain = self.calculate_tva(inputs)
         explains.append(f"\n3. TVA:\n{tva_explain}")
         
-        # 4. Marges
         total_couts_acquisition = inputs.prix_achat_ttc + dmto + emoluments + csi + debours
         total_couts = total_couts_acquisition + inputs.travaux_ttc + inputs.frais_agence_ttc
         marge_brute = inputs.prix_vente_ttc - total_couts
         marge_nette = marge_brute - tva_collectee - tva_marge
         
-        # 5. TRI simplifié (hypothèse 12 mois)
         if total_couts > 0:
-            tri = (marge_nette / total_couts) * 1.0  # Annualisé
+            tri = (marge_nette / total_couts) * 1.0
         else:
             tri = 0.0
         
@@ -255,7 +329,6 @@ class TaxCalculationService:
         marge_explain += f"TRI estimé (12 mois): {tri:.1%}"
         explains.append(marge_explain)
         
-        # Warnings
         warnings = []
         if inputs.hypotheses.get("travaux_structurants", False):
             warnings.append("⚠️ Travaux structurants → Vérifier garantie décennale")
@@ -266,38 +339,159 @@ class TaxCalculationService:
             explains.append(f"\n5. ALERTES:\n" + "\n".join(warnings))
         
         return EstimateOutput(
-            dmto=dmto,
-            emoluments=emoluments,
-            csi=csi,
-            debours=debours,
-            tva_collectee=tva_collectee,
-            tva_marge=tva_marge,
+            dmto=dmto, emoluments=emoluments, csi=csi, debours=debours,
+            tva_collectee=tva_collectee, tva_marge=tva_marge,
             marge_brute=self._decimal_round(marge_brute),
             marge_nette=self._decimal_round(marge_nette),
             tri=self._decimal_round(tri, 4),
             explain="\n".join(explains)
         )
 
-# Initialize service
+# PDF Generation Service
+class PDFGenerationService:
+    @staticmethod
+    def generate_bank_dossier(project: Project, estimate: EstimateOutput) -> io.BytesIO:
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Title
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], 
+                                   fontSize=24, spaceAfter=30, textColor=colors.HexColor('#d97706'))
+        story.append(Paragraph("DOSSIER BANQUE", title_style))
+        story.append(Spacer(1, 20))
+        
+        # Project Summary
+        story.append(Paragraph("RÉSUMÉ DU PROJET", styles['Heading2']))
+        project_data = [
+            ["Nom du projet", project.label],
+            ["Adresse", f"{project.address.get('line1', '')}, {project.address.get('city', '')}"],
+            ["Statut", project.status.value],
+            ["Régime TVA", project.regime_tva.value],
+        ]
+        project_table = Table(project_data, colWidths=[2*inch, 4*inch])
+        project_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('BACKGROUND', (1, 0), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(project_table)
+        story.append(Spacer(1, 30))
+        
+        # Financial Summary
+        story.append(Paragraph("ANALYSE FINANCIÈRE", styles['Heading2']))
+        financial_data = [
+            ["Prix d'achat TTC", f"{project.prix_achat_ttc:,.2f} €"],
+            ["Travaux TTC", f"{project.travaux_ttc:,.2f} €"],
+            ["Prix de vente cible TTC", f"{project.prix_vente_ttc:,.2f} €"],
+            ["Marge nette estimée", f"{estimate.marge_nette:,.2f} €"],
+            ["TRI estimé", f"{estimate.tri:.1%}"],
+        ]
+        financial_table = Table(financial_data, colWidths=[3*inch, 2*inch])
+        financial_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('BACKGROUND', (1, 0), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(financial_table)
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer
+
+    @staticmethod
+    def generate_notaire_dossier(project: Project, estimate: EstimateOutput) -> io.BytesIO:
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Title
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], 
+                                   fontSize=24, spaceAfter=30, textColor=colors.HexColor('#059669'))
+        story.append(Paragraph("DOSSIER NOTAIRE", title_style))
+        story.append(Spacer(1, 20))
+        
+        # Legal Information
+        story.append(Paragraph("INFORMATIONS JURIDIQUES", styles['Heading2']))
+        legal_data = [
+            ["Nom du projet", project.label],
+            ["Adresse complète", f"{project.address.get('line1', '')}, {project.address.get('city', '')}"],
+            ["Département", project.address.get('dept', '')],
+            ["Régime TVA", project.regime_tva.value],
+        ]
+        legal_table = Table(legal_data, colWidths=[2*inch, 4*inch])
+        legal_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('BACKGROUND', (1, 0), (-1, -1), colors.beige),
+            ('GRID', (0, 0, (-1, -1), 1, colors.black)
+        ]))
+        story.append(legal_table)
+        story.append(Spacer(1, 30))
+        
+        # Tax Calculations
+        story.append(Paragraph("CALCULS FISCAUX", styles['Heading2']))
+        tax_data = [
+            ["DMTO", f"{estimate.dmto:,.2f} €"],
+            ["Émoluments", f"{estimate.emoluments:,.2f} €"],
+            ["CSI", f"{estimate.csi:,.2f} €"],
+            ["Débours", f"{estimate.debours:,.2f} €"],
+            ["TVA collectée", f"{estimate.tva_collectee:,.2f} €"],
+            ["TVA sur marge", f"{estimate.tva_marge:,.2f} €"],
+        ]
+        tax_table = Table(tax_data, colWidths=[3*inch, 2*inch])
+        tax_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('BACKGROUND', (1, 0), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(tax_table)
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer
+
+# Initialize services
 tax_service = TaxCalculationService()
+pdf_service = PDFGenerationService()
 
 # API Routes
 @api_router.get("/")
 async def root():
     return {"message": "Marchands de Biens API", "version": "1.0.0"}
 
+# Estimator endpoints
 @api_router.post("/estimate/run", response_model=EstimateOutput)
 async def run_estimate(inputs: EstimateInput):
-    """Calcule une estimation fiscale complète"""
     try:
         result = tax_service.calculate_estimate(inputs)
         
-        # Sauvegarder l'estimation (append-only)
         estimate_record = {
             "id": str(uuid.uuid4()),
             "inputs": inputs.dict(),
             "outputs": result.dict(),
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.estimates.insert_one(estimate_record)
         
@@ -305,27 +499,229 @@ async def run_estimate(inputs: EstimateInput):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erreur de calcul: {str(e)}")
 
+# Project endpoints
 @api_router.get("/projects", response_model=List[Project])
 async def get_projects():
-    """Liste tous les projets"""
     projects = await db.projects.find().to_list(1000)
     return [Project(**project) for project in projects]
 
 @api_router.post("/projects", response_model=Project)
 async def create_project(project_data: ProjectCreate):
-    """Crée un nouveau projet"""
     project_dict = project_data.dict()
     project = Project(**project_dict)
     await db.projects.insert_one(project.dict())
+    
+    # Log project creation event  
+    event = ProjectEvent(
+        project_id=project.id,
+        event_type="project_created",
+        description=f"Projet '{project.label}' créé",
+        user="system"
+    )
+    await db.project_events.insert_one(event.dict())
+    
     return project
 
 @api_router.get("/projects/{project_id}", response_model=Project)
 async def get_project(project_id: str):
-    """Récupère un projet par ID"""
     project = await db.projects.find_one({"id": project_id})
     if not project:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
     return Project(**project)
+
+@api_router.put("/projects/{project_id}", response_model=Project)
+async def update_project(project_id: str, update_data: ProjectUpdate):
+    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    update_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    result = await db.projects.update_one({"id": project_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+    
+    # Log update event
+    event = ProjectEvent(
+        project_id=project_id,
+        event_type="project_updated",
+        description="Projet mis à jour",
+        metadata=update_dict,
+        user="system"
+    )
+    await db.project_events.insert_one(event.dict())
+    
+    updated_project = await db.projects.find_one({"id": project_id})
+    return Project(**updated_project)
+
+# Task endpoints
+@api_router.get("/projects/{project_id}/tasks", response_model=List[Task])
+async def get_project_tasks(project_id: str):
+    tasks = await db.tasks.find({"project_id": project_id}).to_list(1000)
+    return [Task(**task) for task in tasks]
+
+@api_router.post("/projects/{project_id}/tasks", response_model=Task)
+async def create_task(project_id: str, task_data: TaskCreate):
+    task_dict = task_data.dict()
+    task_dict["project_id"] = project_id
+    task = Task(**task_dict)
+    await db.tasks.insert_one(task.dict())
+    
+    # Log task creation event
+    event = ProjectEvent(
+        project_id=project_id,
+        event_type="task_created",
+        description=f"Tâche '{task.title}' créée", 
+        user="system"
+    )
+    await db.project_events.insert_one(event.dict())
+    
+    return task
+
+# Budget endpoints
+@api_router.get("/projects/{project_id}/budget", response_model=List[BudgetItem])
+async def get_project_budget(project_id: str):
+    budget_items = await db.budget_items.find({"project_id": project_id}).to_list(1000)
+    return [BudgetItem(**item) for item in budget_items]
+
+@api_router.post("/projects/{project_id}/budget", response_model=BudgetItem)
+async def create_budget_item(project_id: str, budget_data: BudgetItemCreate):
+    budget_dict = budget_data.dict()
+    budget_dict["project_id"] = project_id
+    budget_item = BudgetItem(**budget_dict)
+    await db.budget_items.insert_one(budget_item.dict())
+    
+    return budget_item
+
+# File upload endpoints
+@api_router.post("/projects/{project_id}/files/upload")
+async def upload_file(
+    project_id: str,
+    category: FileCategory = Form(...),
+    file: UploadFile = File(...)
+):
+    try:
+        # Store file in GridFS
+        file_content = await file.read()
+        gridfs_id = await fs.upload_from_stream(
+            file.filename,
+            io.BytesIO(file_content),
+            metadata={
+                "project_id": project_id,
+                "category": category.value,
+                "content_type": file.content_type,
+                "original_filename": file.filename
+            }
+        )
+        
+        # Store file metadata
+        project_file = ProjectFile(
+            filename=file.filename,
+            original_filename=file.filename,
+            file_size=len(file_content),
+            content_type=file.content_type,
+            category=category,
+            project_id=project_id,
+            gridfs_id=str(gridfs_id)
+        )
+        await db.project_files.insert_one(project_file.dict())
+        
+        # Log file upload event
+        event = ProjectEvent(
+            project_id=project_id,
+            event_type="file_uploaded", 
+            description=f"Fichier '{file.filename}' uploadé dans {category.value}",
+            user="system"
+        )
+        await db.project_events.insert_one(event.dict())
+        
+        return {"message": "Fichier uploadé avec succès", "file_id": project_file.id}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload: {str(e)}")
+
+@api_router.get("/projects/{project_id}/files", response_model=List[ProjectFile])
+async def get_project_files(project_id: str):
+    files = await db.project_files.find({"project_id": project_id}).to_list(1000)
+    return [ProjectFile(**file) for file in files]
+
+# Events endpoints  
+@api_router.get("/projects/{project_id}/events", response_model=List[ProjectEvent])
+async def get_project_events(project_id: str):
+    events = await db.project_events.find({"project_id": project_id}).sort("timestamp", DESCENDING).to_list(1000)
+    return [ProjectEvent(**event) for event in events]
+
+# PDF Export endpoints
+@api_router.get("/projects/{project_id}/export/bank")
+async def export_bank_dossier(project_id: str):
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+    
+    project_obj = Project(**project)
+    
+    # Get latest estimate
+    estimate_record = await db.estimates.find_one(
+        {"inputs.prix_achat_ttc": project_obj.prix_achat_ttc},
+        sort=[("created_at", DESCENDING)]
+    )
+    
+    if estimate_record:
+        estimate = EstimateOutput(**estimate_record["outputs"])
+    else:
+        # Generate estimate on the fly
+        estimate_input = EstimateInput(
+            dept=project_obj.address.get("dept", "75"),
+            regime_tva=project_obj.regime_tva,
+            prix_achat_ttc=project_obj.prix_achat_ttc,
+            prix_vente_ttc=project_obj.prix_vente_ttc,
+            travaux_ttc=project_obj.travaux_ttc,
+            frais_agence_ttc=project_obj.frais_agence_ttc,
+            hypotheses={"md_b_0715_ok": project_obj.flags.get("md_b_0715_ok", False)}
+        )
+        estimate = tax_service.calculate_estimate(estimate_input)
+    
+    pdf_buffer = pdf_service.generate_bank_dossier(project_obj, estimate)
+    
+    return StreamingResponse(
+        io.BytesIO(pdf_buffer.read()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=dossier_banque_{project_obj.label.replace(' ', '_')}.pdf"}
+    )
+
+@api_router.get("/projects/{project_id}/export/notaire")
+async def export_notaire_dossier(project_id: str):
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+    
+    project_obj = Project(**project)
+    
+    # Get latest estimate
+    estimate_record = await db.estimates.find_one(
+        {"inputs.prix_achat_ttc": project_obj.prix_achat_ttc},
+        sort=[("created_at", DESCENDING)]
+    )
+    
+    if estimate_record:
+        estimate = EstimateOutput(**estimate_record["outputs"])
+    else:
+        # Generate estimate on the fly
+        estimate_input = EstimateInput(
+            dept=project_obj.address.get("dept", "75"),
+            regime_tva=project_obj.regime_tva,
+            prix_achat_ttc=project_obj.prix_achat_ttc,
+            prix_vente_ttc=project_obj.prix_vente_ttc,
+            travaux_ttc=project_obj.travaux_ttc,
+            frais_agence_ttc=project_obj.frais_agence_ttc,
+            hypotheses={"md_b_0715_ok": project_obj.flags.get("md_b_0715_ok", False)}
+        )
+        estimate = tax_service.calculate_estimate(estimate_input)
+    
+    pdf_buffer = pdf_service.generate_notaire_dossier(project_obj, estimate)
+    
+    return StreamingResponse(
+        io.BytesIO(pdf_buffer.read()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=dossier_notaire_{project_obj.label.replace(' ', '_')}.pdf"}
+    )
 
 # Include the router in the main app
 app.include_router(api_router)

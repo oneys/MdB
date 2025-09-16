@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
@@ -11,6 +11,7 @@ import { Badge } from "./components/ui/badge";
 import { Separator } from "./components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Progress } from "./components/ui/progress";
+import { Textarea } from "./components/ui/textarea";
 import { 
   Calculator, 
   Building2, 
@@ -25,7 +26,19 @@ import {
   Target,
   Calendar,
   ArrowRight,
-  Plus
+  Plus,
+  Download,
+  Upload,
+  Edit,
+  CheckCircle,
+  Circle,
+  AlertCircle,
+  FolderOpen,
+  DollarSign,
+  Percent,
+  Activity,
+  Eye,
+  ArrowLeft
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -53,6 +66,16 @@ const mockProjects = [
       commercialisation: null,
       revente: null
     },
+    financing: {
+      pret_montant: 240000,
+      pret_taux: 0.045,
+      pret_duree: 180,
+      apport_personnel: 80000
+    },
+    flags: {
+      md_b_0715_ok: true,
+      travaux_structurants: true
+    },
     created_at: "2025-08-01T10:00:00Z"
   },
   {
@@ -60,7 +83,7 @@ const mockProjects = [
     label: "Appartement Haussmannien",
     address: { line1: "45 Avenue Victor Hugo", city: "Paris", insee: "75116", dept: "75" },
     status: "TRAVAUX",
-    regime_tva: "MARGE",
+    regime_tva: "MARGE", 
     prix_achat_ttc: 480000,
     prix_vente_ttc: 720000,
     travaux_ttc: 120000,
@@ -74,6 +97,16 @@ const mockProjects = [
       fin_travaux: "2025-11-30",
       commercialisation: null,
       revente: null
+    },
+    financing: {
+      pret_montant: 360000,
+      pret_taux: 0.042,
+      pret_duree: 240,
+      apport_personnel: 120000
+    },
+    flags: {
+      md_b_0715_ok: true,
+      travaux_structurants: false
     },
     created_at: "2025-07-01T14:00:00Z"
   },
@@ -97,6 +130,16 @@ const mockProjects = [
       commercialisation: "2025-09-20",
       revente: null
     },
+    financing: {
+      pret_montant: 315000,
+      pret_taux: 0.038,
+      pret_duree: 180,
+      apport_personnel: 105000
+    },
+    flags: {
+      md_b_0715_ok: false,
+      travaux_structurants: false
+    },
     created_at: "2025-05-15T09:00:00Z"
   },
   {
@@ -118,6 +161,16 @@ const mockProjects = [
       fin_travaux: "2025-07-15",
       commercialisation: "2025-07-20",
       revente: "2025-09-25"
+    },
+    financing: {
+      pret_montant: 135000,
+      pret_taux: 0.04,
+      pret_duree: 120,
+      apport_personnel: 45000
+    },
+    flags: {
+      md_b_0715_ok: false,
+      travaux_structurants: false
     },
     created_at: "2025-04-01T11:00:00Z"
   },
@@ -141,6 +194,16 @@ const mockProjects = [
       commercialisation: null,
       revente: null
     },
+    financing: {
+      pret_montant: 210000,
+      pret_taux: 0.046,
+      pret_duree: 180,
+      apport_personnel: 70000
+    },
+    flags: {
+      md_b_0715_ok: true,
+      travaux_structurants: true
+    },
     created_at: "2025-09-05T16:00:00Z"
   },
   {
@@ -163,6 +226,16 @@ const mockProjects = [
       commercialisation: null,
       revente: null
     },
+    financing: {
+      pret_montant: 285000,
+      pret_taux: 0.043,
+      pret_duree: 180,
+      apport_personnel: 95000
+    },
+    flags: {
+      md_b_0715_ok: true,
+      travaux_structurants: false
+    },
     created_at: "2025-09-08T12:00:00Z"
   }
 ];
@@ -179,7 +252,7 @@ const statusConfig = {
 };
 
 // Navigation Component
-const Navigation = ({ activeTab, setActiveTab }) => {
+const Navigation = ({ activeTab, setActiveTab, selectedProject, setSelectedProject }) => {
   return (
     <div className="border-b border-slate-200 bg-white">
       <div className="max-w-7xl mx-auto px-4">
@@ -191,22 +264,39 @@ const Navigation = ({ activeTab, setActiveTab }) => {
               <p className="text-sm text-slate-600">Plateforme SaaS Immobilier</p>
             </div>
           </div>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                <Home className="h-4 w-4" />
-                Dashboard
-              </TabsTrigger>
-              <TabsTrigger value="pipeline" className="flex items-center gap-2">
-                <Kanban className="h-4 w-4" />
-                Pipeline
-              </TabsTrigger>
-              <TabsTrigger value="estimateur" className="flex items-center gap-2">
-                <Calculator className="h-4 w-4" />
-                Estimateur
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          
+          <div className="flex items-center gap-4">
+            {selectedProject && (
+              <Button 
+                variant="ghost" 
+                onClick={() => {
+                  setSelectedProject(null);
+                  setActiveTab("dashboard");
+                }}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Retour
+              </Button>
+            )}
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Dashboard
+                </TabsTrigger>
+                <TabsTrigger value="pipeline" className="flex items-center gap-2">
+                  <Kanban className="h-4 w-4" />
+                  Pipeline
+                </TabsTrigger>
+                <TabsTrigger value="estimateur" className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Estimateur
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
       </div>
     </div>
@@ -214,7 +304,7 @@ const Navigation = ({ activeTab, setActiveTab }) => {
 };
 
 // Dashboard Component
-const Dashboard = ({ projects }) => {
+const Dashboard = ({ projects, onProjectSelect }) => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -247,7 +337,7 @@ const Dashboard = ({ projects }) => {
     <div className="space-y-6">
       {/* KPIs Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+        <Card className="kpi-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -260,7 +350,7 @@ const Dashboard = ({ projects }) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="kpi-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -273,7 +363,7 @@ const Dashboard = ({ projects }) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="kpi-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -286,7 +376,7 @@ const Dashboard = ({ projects }) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="kpi-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -329,7 +419,11 @@ const Dashboard = ({ projects }) => {
         <CardContent>
           <div className="space-y-4">
             {projects.slice(0, 6).map((project) => (
-              <div key={project.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+              <div 
+                key={project.id} 
+                className="project-item flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer"
+                onClick={() => onProjectSelect(project)}
+              >
                 <div className="flex items-center gap-4">
                   <div className={`w-3 h-3 rounded-full ${statusConfig[project.status].color}`}></div>
                   <div>
@@ -357,7 +451,7 @@ const Dashboard = ({ projects }) => {
 };
 
 // Pipeline Kanban Component
-const Pipeline = ({ projects }) => {
+const Pipeline = ({ projects, onProjectSelect }) => {
   const [localProjects, setLocalProjects] = useState(projects);
 
   const handleDragStart = (e, projectId) => {
@@ -413,7 +507,7 @@ const Pipeline = ({ projects }) => {
           return (
             <div 
               key={status}
-              className="flex-shrink-0 w-80 bg-slate-50 rounded-lg p-4"
+              className="kanban-column flex-shrink-0 w-80 bg-slate-50 rounded-lg p-4"
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, status)}
             >
@@ -433,7 +527,8 @@ const Pipeline = ({ projects }) => {
                     key={project.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, project.id)}
-                    className="bg-white rounded-lg p-4 shadow-sm border border-slate-200 cursor-move hover:shadow-md transition-shadow"
+                    onClick={() => onProjectSelect(project)}
+                    className="kanban-card bg-white rounded-lg p-4 shadow-sm border border-slate-200 cursor-pointer"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium text-slate-900 text-sm leading-tight">
@@ -470,7 +565,6 @@ const Pipeline = ({ projects }) => {
                       </div>
                     </div>
 
-                    {/* Progress indicators */}
                     <div className="mt-3 pt-3 border-t border-slate-100">
                       <div className="flex items-center gap-2 text-xs text-slate-500">
                         <Calendar className="h-3 w-3" />
@@ -499,7 +593,611 @@ const Pipeline = ({ projects }) => {
   );
 };
 
-// Estimateur Component (existing)
+// Fiche Projet Component
+const FicheProjet = ({ project, onBack }) => {
+  const [activePanel, setActivePanel] = useState("apercu");
+  const [tasks, setTasks] = useState([]);
+  const [budgetItems, setBudgetItems] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [newTask, setNewTask] = useState({ title: "", description: "", due_date: "" });
+  const [newBudgetItem, setNewBudgetItem] = useState({ 
+    category: "", 
+    description: "", 
+    montant_prevu_ht: 0 
+  });
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatPercent = (value) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
+  const calculateBudgetEcarts = () => {
+    const prevuTotal = budgetItems.reduce((sum, item) => sum + item.montant_prevu_ht, 0);
+    const reelTotal = budgetItems.reduce((sum, item) => sum + item.montant_reel_ht, 0);
+    const ecart = reelTotal - prevuTotal;
+    const ecartPercent = prevuTotal > 0 ? ecart / prevuTotal : 0;
+    return { prevuTotal, reelTotal, ecart, ecartPercent };
+  };
+
+  const addTask = async () => {
+    if (!newTask.title) return;
+    
+    try {
+      const response = await axios.post(`${API}/projects/${project.id}/tasks`, newTask);
+      setTasks([...tasks, response.data]);
+      setNewTask({ title: "", description: "", due_date: "" });
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de la tâche:", error);
+    }
+  };
+
+  const addBudgetItem = async () => {
+    if (!newBudgetItem.category || !newBudgetItem.description) return;
+    
+    try {
+      const response = await axios.post(`${API}/projects/${project.id}/budget`, newBudgetItem);
+      setBudgetItems([...budgetItems, response.data]);
+      setNewBudgetItem({ category: "", description: "", montant_prevu_ht: 0 });
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du poste budgétaire:", error);
+    }
+  };
+
+  const exportPDF = async (type) => {
+    try {
+      const response = await axios.get(`${API}/projects/${project.id}/export/${type}`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `dossier_${type}_${project.label.replace(/\s+/g, '_')}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(`Erreur lors de l'export ${type}:`, error);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header KPIs XXL */}
+      <Card className="bg-gradient-to-r from-amber-50 to-emerald-50 border-none">
+        <CardContent className="pt-8 pb-6">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">{project.label}</h1>
+              <p className="text-lg text-slate-600">{project.address.line1}, {project.address.city}</p>
+              <div className="flex items-center gap-4 mt-2">
+                <Badge 
+                  variant="outline" 
+                  className={`${statusConfig[project.status].color} text-white border-transparent`}
+                >
+                  {statusConfig[project.status].label}
+                </Badge>
+                <Badge variant="outline" className="border-amber-300 text-amber-700">
+                  {project.regime_tva}
+                </Badge>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => exportPDF('bank')} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Dossier Banque
+              </Button>
+              <Button onClick={() => exportPDF('notaire')} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Dossier Notaire
+              </Button>
+            </div>
+          </div>
+
+          {/* KPIs Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-emerald-600 mb-1">
+                {formatCurrency(project.marge_estimee)}
+              </div>
+              <div className="text-sm text-slate-600">Marge Nette</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-amber-600 mb-1">
+                {formatPercent(project.tri_estime)}
+              </div>
+              <div className="text-sm text-slate-600">TRI Estimé</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-1">
+                {project.milestones.acte_achat ? 
+                  new Date(project.milestones.acte_achat).toLocaleDateString('fr-FR') : 
+                  'À prévoir'
+                }
+              </div>
+              <div className="text-sm text-slate-600">Date Acte</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-1">
+                +5%
+              </div>
+              <div className="text-sm text-slate-600">Δ Budget</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-slate-600 mb-1">
+                65%
+              </div>
+              <div className="text-sm text-slate-600">Avancement</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Panneaux */}
+      <Tabs value={activePanel} onValueChange={setActivePanel}>
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="apercu">Aperçu</TabsTrigger>
+          <TabsTrigger value="budget">Budget</TabsTrigger>
+          <TabsTrigger value="taches">Tâches</TabsTrigger>
+          <TabsTrigger value="dataroom">Dataroom</TabsTrigger>
+          <TabsTrigger value="financement">Financement</TabsTrigger>
+          <TabsTrigger value="journal">Journal</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="apercu" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Informations générales */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Informations Générales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Prix d'achat TTC</Label>
+                      <div className="font-medium text-lg">{formatCurrency(project.prix_achat_ttc)}</div>
+                    </div>
+                    <div>
+                      <Label>Prix de vente TTC</Label>
+                      <div className="font-medium text-lg">{formatCurrency(project.prix_vente_ttc)}</div>
+                    </div>
+                    <div>
+                      <Label>Travaux TTC</Label>
+                      <div className="font-medium text-lg">{formatCurrency(project.travaux_ttc)}</div>
+                    </div>
+                    <div>
+                      <Label>Frais agence TTC</Label>
+                      <div className="font-medium text-lg">{formatCurrency(project.frais_agence_ttc)}</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Jalons */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Jalons du Projet</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(project.milestones).map(([milestone, date]) => (
+                    <div key={milestone} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {date ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-slate-300" />
+                        )}
+                        <span className="capitalize">{milestone.replace('_', ' ')}</span>
+                      </div>
+                      <span className="text-sm text-slate-500">
+                        {date ? new Date(date).toLocaleDateString('fr-FR') : 'À prévoir'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="budget" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* KPIs Budget */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Synthèse Budget</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {formatCurrency(calculateBudgetEcarts().prevuTotal)}
+                    </div>
+                    <div className="text-sm text-slate-600">Budget Prévu</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {formatCurrency(calculateBudgetEcarts().reelTotal)}
+                    </div>
+                    <div className="text-sm text-slate-600">Réalisé</div>
+                  </div>
+                  <div>
+                    <div className={`text-2xl font-bold ${
+                      calculateBudgetEcarts().ecart > 0 ? 'text-red-600' : 'text-green-600'
+                    }`}>
+                      {calculateBudgetEcarts().ecart > 0 ? '+' : ''}{formatCurrency(calculateBudgetEcarts().ecart)}
+                    </div>
+                    <div className="text-sm text-slate-600">Écart</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ajouter poste budgétaire */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Nouveau Poste</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Catégorie</Label>
+                    <Select 
+                      value={newBudgetItem.category} 
+                      onValueChange={(value) => setNewBudgetItem({...newBudgetItem, category: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Gros oeuvre">Gros œuvre</SelectItem>
+                        <SelectItem value="Second oeuvre">Second œuvre</SelectItem>
+                        <SelectItem value="Finitions">Finitions</SelectItem>
+                        <SelectItem value="Équipements">Équipements</SelectItem>
+                        <SelectItem value="Divers">Divers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <Input 
+                      value={newBudgetItem.description}
+                      onChange={(e) => setNewBudgetItem({...newBudgetItem, description: e.target.value})}
+                      placeholder="Description du poste"
+                    />
+                  </div>
+                  <div>
+                    <Label>Montant HT</Label>
+                    <Input 
+                      type="number"
+                      value={newBudgetItem.montant_prevu_ht}
+                      onChange={(e) => setNewBudgetItem({...newBudgetItem, montant_prevu_ht: parseFloat(e.target.value) || 0})}
+                      placeholder="0"
+                    />
+                  </div>
+                  <Button onClick={addBudgetItem} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Liste des postes budgétaires */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Postes Budgétaires</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {budgetItems.length === 0 ? (
+                    <p className="text-slate-500 text-center py-4">Aucun poste budgétaire</p>
+                  ) : (
+                    budgetItems.map((item) => (
+                      <div key={item.id} className="flex justify-between items-center p-3 border border-slate-200 rounded">
+                        <div>
+                          <div className="font-medium">{item.description}</div>
+                          <div className="text-sm text-slate-600">{item.category}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">{formatCurrency(item.montant_prevu_ht)}</div>
+                          <div className="text-sm text-slate-500">HT</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="taches" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Ajouter tâche */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Nouvelle Tâche</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Titre</Label>
+                    <Input 
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                      placeholder="Titre de la tâche"
+                    />
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea 
+                      value={newTask.description}
+                      onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                      placeholder="Description détaillée"
+                    />
+                  </div>
+                  <div>
+                    <Label>Date d'échéance</Label>
+                    <Input 
+                      type="date"
+                      value={newTask.due_date}
+                      onChange={(e) => setNewTask({...newTask, due_date: e.target.value})}
+                    />
+                  </div>
+                  <Button onClick={addTask} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter Tâche
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Liste des tâches */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Tâches du Projet</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {tasks.length === 0 ? (
+                    <p className="text-slate-500 text-center py-4">Aucune tâche créée</p>
+                  ) : (
+                    tasks.map((task) => (
+                      <div key={task.id} className="flex items-center gap-3 p-3 border border-slate-200 rounded">
+                        {task.status === 'TERMINE' ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : task.status === 'EN_RETARD' ? (
+                          <AlertCircle className="h-5 w-5 text-red-500" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-slate-300" />
+                        )}
+                        <div className="flex-1">
+                          <div className="font-medium">{task.title}</div>
+                          {task.description && (
+                            <div className="text-sm text-slate-600">{task.description}</div>
+                          )}
+                          {task.due_date && (
+                            <div className="text-xs text-slate-500">
+                              Échéance: {new Date(task.due_date).toLocaleDateString('fr-FR')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="dataroom" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Upload */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload Fichier</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
+                    <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-600">Glissez-déposez vos fichiers ici</p>
+                    <p className="text-sm text-slate-500">ou cliquez pour sélectionner</p>
+                  </div>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="JURIDIQUE">Juridique</SelectItem>
+                      <SelectItem value="TECHNIQUE">Technique</SelectItem>
+                      <SelectItem value="FINANCIER">Financier</SelectItem>
+                      <SelectItem value="ADMINISTRATIF">Administratif</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button className="w-full">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Arborescence */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Documents du Projet</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {['JURIDIQUE', 'TECHNIQUE', 'FINANCIER', 'ADMINISTRATIF'].map((category) => (
+                    <div key={category} className="border border-slate-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FolderOpen className="h-5 w-5 text-amber-600" />
+                        <span className="font-medium">{category}</span>
+                        <Badge variant="outline" className="ml-auto">0</Badge>
+                      </div>
+                      <div className="text-sm text-slate-500 text-center py-4">
+                        Aucun fichier dans cette catégorie
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="financement" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Informations de financement */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Détails du Financement</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Montant du prêt</Label>
+                      <div className="font-medium text-lg">
+                        {formatCurrency(project.financing?.pret_montant || 0)}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Taux d'intérêt</Label>
+                      <div className="font-medium text-lg">
+                        {formatPercent(project.financing?.pret_taux || 0)}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Durée (mois)</Label>
+                      <div className="font-medium text-lg">
+                        {project.financing?.pret_duree || 0} mois
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Apport personnel</Label>
+                      <div className="font-medium text-lg">
+                        {formatCurrency(project.financing?.apport_personnel || 0)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Simulation */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Simulation Échéancier</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600 mb-1">
+                      {project.financing?.pret_montant && project.financing?.pret_taux ? 
+                        formatCurrency(
+                          (project.financing.pret_montant * project.financing.pret_taux / 12) / 
+                          (1 - Math.pow(1 + project.financing.pret_taux / 12, -project.financing.pret_duree))
+                        ) : 
+                        'N/A'
+                      }
+                    </div>
+                    <div className="text-sm text-slate-600">Mensualité estimée</div>
+                  </div>
+                  <Separator />
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Capital emprunté</span>
+                      <span>{formatCurrency(project.financing?.pret_montant || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Intérêts totaux</span>
+                      <span>
+                        {project.financing?.pret_montant && project.financing?.pret_taux && project.financing?.pret_duree ? 
+                          formatCurrency(
+                            ((project.financing.pret_montant * project.financing.pret_taux / 12) / 
+                            (1 - Math.pow(1 + project.financing.pret_taux / 12, -project.financing.pret_duree))) * 
+                            project.financing.pret_duree - project.financing.pret_montant
+                          ) : 
+                          'N/A'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-medium">
+                      <span>Coût total</span>
+                      <span>
+                        {project.financing?.pret_montant && project.financing?.pret_taux && project.financing?.pret_duree ? 
+                          formatCurrency(
+                            ((project.financing.pret_montant * project.financing.pret_taux / 12) / 
+                            (1 - Math.pow(1 + project.financing.pret_taux / 12, -project.financing.pret_duree))) * 
+                            project.financing.pret_duree
+                          ) : 
+                          'N/A'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="journal" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Journal des Événements</CardTitle>
+              <CardDescription>Historique complet des activités du projet</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {events.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Activity className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500">Aucun événement enregistré</p>
+                  </div>
+                ) : (
+                  events.map((event) => (
+                    <div key={event.id} className="flex items-start gap-3 p-4 border border-slate-200 rounded-lg">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <div className="font-medium">{event.description}</div>
+                        <div className="text-sm text-slate-600">{event.event_type}</div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          {new Date(event.timestamp).toLocaleString('fr-FR')}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+// Estimateur Component (unchanged from previous)
 const Estimateur = () => {
   const [formData, setFormData] = useState({
     dept: "75",
@@ -811,17 +1509,42 @@ const Estimateur = () => {
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [projects] = useState(mockProjects);
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  const handleProjectSelect = (project) => {
+    setSelectedProject(project);
+    setActiveTab("project");
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-      
-      <div className="max-w-7xl mx-auto p-6">
-        {activeTab === "dashboard" && <Dashboard projects={projects} />}
-        {activeTab === "pipeline" && <Pipeline projects={projects} />}
-        {activeTab === "estimateur" && <Estimateur />}
+    <BrowserRouter>
+      <div className="min-h-screen bg-slate-50">
+        <Navigation 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+          selectedProject={selectedProject}
+          setSelectedProject={setSelectedProject}
+        />
+        
+        <div className="max-w-7xl mx-auto p-6">
+          {selectedProject ? (
+            <FicheProjet 
+              project={selectedProject} 
+              onBack={() => {
+                setSelectedProject(null);
+                setActiveTab("dashboard");
+              }}
+            />
+          ) : (
+            <>
+              {activeTab === "dashboard" && <Dashboard projects={projects} onProjectSelect={handleProjectSelect} />}
+              {activeTab === "pipeline" && <Pipeline projects={projects} onProjectSelect={handleProjectSelect} />}
+              {activeTab === "estimateur" && <Estimateur />}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
 
