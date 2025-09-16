@@ -440,7 +440,7 @@ class PDFGenerationService:
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
             ('BACKGROUND', (1, 0), (-1, -1), colors.beige),
-            ('GRID', (0, 0, (-1, -1), 1, colors.black)
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
         story.append(legal_table)
         story.append(Spacer(1, 30))
