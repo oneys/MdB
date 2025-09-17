@@ -1352,6 +1352,168 @@ const FicheProjet = ({ project, onBack }) => {
         </Card>
       </div>
 
+      {/* Panneaux détaillés de la Fiche Projet */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Budget & Écarts */}
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Euro className="h-5 w-5" />
+              Budget & Écarts
+            </CardTitle>
+            <CardDescription>Suivi des coûts prévisionnels vs réels</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-4 text-sm font-medium text-slate-600 border-b pb-2">
+                <div>Poste</div>
+                <div className="text-right">Prévu HT</div>
+                <div className="text-right">Réel HT</div>
+                <div className="text-right">Écart</div>
+              </div>
+              
+              {/* Acquisition */}
+              <div className="grid grid-cols-4 gap-4 text-sm">
+                <div className="font-medium">Prix d'achat</div>
+                <div className="text-right">{formatCurrency(project.prix_achat_ttc / 1.20)}</div>
+                <div className="text-right text-slate-400">En cours</div>
+                <div className="text-right text-slate-400">-</div>
+              </div>
+              
+              {/* Travaux */}
+              <div className="grid grid-cols-4 gap-4 text-sm">
+                <div className="font-medium">Travaux</div>
+                <div className="text-right">{formatCurrency(project.travaux_ttc / 1.20)}</div>
+                <div className="text-right text-amber-600">{formatCurrency(project.travaux_ttc / 1.20 * 1.15)}</div>
+                <div className="text-right text-red-600">+{formatPercent(0.15)}</div>
+              </div>
+              
+              {/* Frais agence */}
+              <div className="grid grid-cols-4 gap-4 text-sm">
+                <div className="font-medium">Frais agence</div>
+                <div className="text-right">{formatCurrency(project.frais_agence_ttc / 1.20)}</div>
+                <div className="text-right text-green-600">{formatCurrency(project.frais_agence_ttc / 1.20 * 0.95)}</div>
+                <div className="text-right text-green-600">-{formatPercent(0.05)}</div>
+              </div>
+              
+              <Separator />
+              
+              {/* Total */}
+              <div className="grid grid-cols-4 gap-4 text-sm font-semibold">
+                <div>Total HT</div>
+                <div className="text-right">{formatCurrency((project.prix_achat_ttc + project.travaux_ttc + project.frais_agence_ttc) / 1.20)}</div>
+                <div className="text-right text-amber-600">{formatCurrency((project.prix_achat_ttc + project.travaux_ttc * 1.15 + project.frais_agence_ttc * 0.95) / 1.20)}</div>
+                <div className="text-right text-amber-600">+{formatPercent(0.08)}</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tâches */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Tâches
+            </CardTitle>
+            <CardDescription>To-do et jalons du projet</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              { id: 1, title: "Compromis de vente", status: "completed", due: "2025-01-15" },
+              { id: 2, title: "Demande permis travaux", status: "in_progress", due: "2025-02-01" },
+              { id: 3, title: "Devis entreprises", status: "pending", due: "2025-02-15" },
+              { id: 4, title: "Début travaux", status: "pending", due: "2025-03-01" },
+              { id: 5, title: "Fin travaux", status: "pending", due: "2025-06-01" }
+            ].map((task) => (
+              <div key={task.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  {task.status === 'completed' ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : task.status === 'in_progress' ? (
+                    <Clock className="h-4 w-4 text-amber-500" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-slate-300" />
+                  )}
+                  <span className={`text-sm ${task.status === 'completed' ? 'line-through text-slate-500' : ''}`}>
+                    {task.title}
+                  </span>
+                </div>
+                <span className="text-xs text-slate-500">{new Date(task.due).toLocaleDateString('fr-FR')}</span>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" className="w-full mt-3">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter une tâche
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Journal d'événements */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Journal d'événements
+          </CardTitle>
+          <CardDescription>Historique complet des modifications</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[
+              {
+                id: 1,
+                type: "status_change",
+                description: "Statut changé de OFFRE vers COMPROMIS",
+                user: "Jean Dupont",
+                timestamp: "2025-01-20T14:30:00Z",
+                icon: <ArrowRight className="h-4 w-4 text-blue-500" />
+              },
+              {
+                id: 2,
+                type: "budget_update", 
+                description: "Budget travaux mis à jour: 80 000€ → 92 000€",
+                user: "Marie Martin",
+                timestamp: "2025-01-19T09:15:00Z",
+                icon: <Euro className="h-4 w-4 text-amber-500" />
+              },
+              {
+                id: 3,
+                type: "document_upload",
+                description: "Document ajouté: Compromis_signé.pdf",
+                user: "Jean Dupont", 
+                timestamp: "2025-01-18T16:45:00Z",
+                icon: <Upload className="h-4 w-4 text-green-500" />
+              },
+              {
+                id: 4,
+                type: "project_created",
+                description: "Projet créé",
+                user: "Jean Dupont",
+                timestamp: "2025-01-15T10:00:00Z",
+                icon: <Plus className="h-4 w-4 text-slate-500" />
+              }
+            ].map((event) => (
+              <div key={event.id} className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg">
+                <div className="flex-shrink-0 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
+                  {event.icon}
+                </div>
+                <div className="flex-grow">
+                  <p className="text-sm font-medium text-slate-900">{event.description}</p>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                    <User className="h-3 w-3" />
+                    <span>{event.user}</span>
+                    <span>•</span>
+                    <span>{new Date(event.timestamp).toLocaleDateString('fr-FR')} à {new Date(event.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Actions */}
       <Card>
         <CardHeader>
