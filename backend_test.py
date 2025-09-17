@@ -379,7 +379,10 @@ def main():
     tester.test_case_b_tva_normale()
     tester.test_case_c_exoneration()
     
-    print("\n3. Testing Projects Endpoints...")
+    print("\n3. Testing Field Validation...")
+    tester.test_comprehensive_field_validation()
+    
+    print("\n4. Testing Projects Endpoints...")
     tester.test_projects_endpoints()
     
     # Print summary
