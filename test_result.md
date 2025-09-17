@@ -234,7 +234,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Frontend UI testing (si nécessaire)"
+    - "Authentification OAuth Google pour tests UI complets"
     - "Barèmes JSON versionnés (amélioration future)"
   stuck_tasks: []
   test_all: false
