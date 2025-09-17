@@ -196,12 +196,7 @@ const LoginPage = () => {
     window.location.href = oauthUrl;
   };
 
-  const handleTestReturn = () => {
-    // Simulate OAuth return for testing
-    const testUrl = `${window.location.origin}/dashboard#session_id=test_${Date.now()}`;
-    console.log("🧪 Test OAuth return:", testUrl);
-    window.location.href = testUrl;
-  };
+  // Debug function removed - use real OAuth flow for production
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
