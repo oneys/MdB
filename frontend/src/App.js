@@ -893,8 +893,470 @@ const Pipeline = ({ projects, onProjectSelect }) => {
   );
 };
 
-// Continue with FicheProjet and Estimateur components (unchanged structure)
-// ... [Rest of components remain the same as previous implementation]
+// Estimateur Component
+const Estimateur = () => {
+  const [formData, setFormData] = useState({
+    dept: "75",
+    regime_tva: "MARGE",
+    prix_achat_ttc: 300000,
+    prix_vente_ttc: 520000,
+    travaux_ttc: 80000,
+    frais_agence_ttc: 15000,
+    hypotheses: {
+      md_b_0715_ok: true,
+      travaux_structurants: false
+    }
+  });
+
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleInputChange = (field, value) => {
+    if (field.startsWith('hypotheses.')) {
+      const hypothesesField = field.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        hypotheses: {
+          ...prev.hypotheses,
+          [hypothesesField]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  const runEstimate = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.post(`${API}/estimate/run`, formData, { withCredentials: true });
+      setResult(response.data);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erreur lors du calcul");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(amount);
+  };
+
+  const formatPercent = (value) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Estimateur Fiscal</h2>
+        <p className="text-slate-600">Calculez précisément vos marges et obligations fiscales</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Formulaire d'entrée */}
+        <Card className="h-fit">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              Paramètres du projet
+            </CardTitle>
+            <CardDescription>
+              Saisissez les données de votre opération immobilière
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Localisation */}
+            <div className="space-y-2">
+              <Label htmlFor="dept">Département</Label>
+              <Select value={formData.dept} onValueChange={(value) => handleInputChange('dept', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="75">75 - Paris</SelectItem>
+                  <SelectItem value="92">92 - Hauts-de-Seine</SelectItem>
+                  <SelectItem value="93">93 - Seine-Saint-Denis</SelectItem>
+                  <SelectItem value="94">94 - Val-de-Marne</SelectItem>
+                  <SelectItem value="95">95 - Val-d'Oise</SelectItem>
+                  <SelectItem value="69">69 - Rhône</SelectItem>
+                  <SelectItem value="13">13 - Bouches-du-Rhône</SelectItem>
+                  <SelectItem value="33">33 - Gironde</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Régime TVA */}
+            <div className="space-y-2">
+              <Label htmlFor="regime_tva">Régime TVA</Label>
+              <Select value={formData.regime_tva} onValueChange={(value) => handleInputChange('regime_tva', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MARGE">TVA sur marge</SelectItem>
+                  <SelectItem value="NORMAL">TVA normale</SelectItem>
+                  <SelectItem value="EXO">Exonération</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator />
+
+            {/* Montants */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="prix_achat">Prix d'achat TTC</Label>
+                <Input
+                  id="prix_achat"
+                  type="number"
+                  value={formData.prix_achat_ttc}
+                  onChange={(e) => handleInputChange('prix_achat_ttc', parseFloat(e.target.value) || 0)}
+                  placeholder="300000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="prix_vente">Prix de vente TTC</Label>
+                <Input
+                  id="prix_vente"
+                  type="number"
+                  value={formData.prix_vente_ttc}
+                  onChange={(e) => handleInputChange('prix_vente_ttc', parseFloat(e.target.value) || 0)}
+                  placeholder="520000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="travaux">Travaux TTC</Label>
+                <Input
+                  id="travaux"
+                  type="number"
+                  value={formData.travaux_ttc}
+                  onChange={(e) => handleInputChange('travaux_ttc', parseFloat(e.target.value) || 0)}
+                  placeholder="80000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="frais_agence">Frais agence TTC</Label>
+                <Input
+                  id="frais_agence"
+                  type="number"
+                  value={formData.frais_agence_ttc}
+                  onChange={(e) => handleInputChange('frais_agence_ttc', parseFloat(e.target.value) || 0)}
+                  placeholder="15000"
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Hypothèses */}
+            <div className="space-y-4">
+              <Label className="text-base font-medium">Hypothèses</Label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="md_b_eligible" className="text-sm">Éligible droits MdB 0,715%</Label>
+                  <input
+                    id="md_b_eligible"
+                    type="checkbox"
+                    checked={formData.hypotheses.md_b_0715_ok}
+                    onChange={(e) => handleInputChange('hypotheses.md_b_0715_ok', e.target.checked)}
+                    className="rounded border-slate-300"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="travaux_structurants" className="text-sm">Travaux structurants</Label>
+                  <input
+                    id="travaux_structurants"
+                    type="checkbox"
+                    checked={formData.hypotheses.travaux_structurants}
+                    onChange={(e) => handleInputChange('hypotheses.travaux_structurants', e.target.checked)}
+                    className="rounded border-slate-300"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              onClick={runEstimate} 
+              disabled={loading}
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {loading ? "Calcul en cours..." : "Calculer l'estimation"}
+            </Button>
+
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800 text-sm">{error}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Résultats */}
+        {result && (
+          <div className="space-y-6">
+            {/* KPIs principaux */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">Marge nette</p>
+                      <p className="text-2xl font-bold text-emerald-600">
+                        {formatCurrency(result.marge_nette)}
+                      </p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-emerald-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">TRI estimé</p>
+                      <p className="text-2xl font-bold text-amber-600">
+                        {formatPercent(result.tri)}
+                      </p>
+                    </div>
+                    <Calculator className="h-8 w-8 text-amber-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Détail des coûts */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Répartition des coûts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">DMTO</span>
+                    <span className="font-medium">{formatCurrency(result.dmto)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Émoluments notaire</span>
+                    <span className="font-medium">{formatCurrency(result.emoluments)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">CSI (0,1%)</span>
+                    <span className="font-medium">{formatCurrency(result.csi)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Débours</span>
+                    <span className="font-medium">{formatCurrency(result.debours)}</span>
+                  </div>
+                  {result.tva_collectee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">TVA collectée</span>
+                      <span className="font-medium">{formatCurrency(result.tva_collectee)}</span>
+                    </div>
+                  )}
+                  {result.tva_marge > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">TVA sur marge</span>
+                      <span className="font-medium">{formatCurrency(result.tva_marge)}</span>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>Marge brute</span>
+                    <span>{formatCurrency(result.marge_brute)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Détail des calculs */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Détail des calculs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <pre className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                  {result.explain}
+                </pre>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Fiche Projet Simplifiée (pour l'instant)
+const FicheProjet = ({ project, onBack }) => {
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatPercent = (value) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <Card className="bg-gradient-to-r from-amber-50 to-emerald-50 border-none">
+        <CardContent className="pt-8 pb-6">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">{project.label}</h1>
+              <p className="text-lg text-slate-600">{project.address.line1}, {project.address.city}</p>
+              <div className="flex items-center gap-4 mt-2">
+                <Badge className="bg-amber-100 text-amber-700 border-transparent">
+                  {project.status}
+                </Badge>
+                <Badge variant="outline" className="border-amber-300 text-amber-700">
+                  {project.regime_tva}
+                </Badge>
+              </div>
+            </div>
+            <Button onClick={onBack} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+          </div>
+
+          {/* KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-emerald-600 mb-1">
+                {formatCurrency(project.marge_estimee)}
+              </div>
+              <div className="text-sm text-slate-600">Marge Estimée</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-amber-600 mb-1">
+                {formatPercent(project.tri_estime)}
+              </div>
+              <div className="text-sm text-slate-600">TRI Estimé</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-1">
+                {formatCurrency(project.prix_achat_ttc)}
+              </div>
+              <div className="text-sm text-slate-600">Prix d'Achat</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-1">
+                {formatCurrency(project.prix_vente_ttc)}
+              </div>
+              <div className="text-sm text-slate-600">Prix de Vente</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Détails du projet */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Informations Financières</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Prix d'achat TTC</span>
+                <span className="font-medium">{formatCurrency(project.prix_achat_ttc)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Travaux TTC</span>
+                <span className="font-medium">{formatCurrency(project.travaux_ttc)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Frais agence TTC</span>
+                <span className="font-medium">{formatCurrency(project.frais_agence_ttc)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Prix de vente cible</span>
+                <span className="text-emerald-600">{formatCurrency(project.prix_vente_ttc)}</span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Marge estimée</span>
+                <span className="text-emerald-600">{formatCurrency(project.marge_estimee)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Jalons du Projet</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.entries(project.milestones || {}).map(([milestone, date]) => (
+                <div key={milestone} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {date ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <Circle className="h-5 w-5 text-slate-300" />
+                    )}
+                    <span className="capitalize">{milestone.replace('_', ' ')}</span>
+                  </div>
+                  <span className="text-sm text-slate-500">
+                    {date ? new Date(date).toLocaleDateString('fr-FR') : 'À prévoir'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Button className="bg-amber-600 hover:bg-amber-700">
+              <Download className="h-4 w-4 mr-2" />
+              Dossier Banque
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Dossier Notaire
+            </Button>
+            <Button variant="outline">
+              <Edit className="h-4 w-4 mr-2" />
+              Modifier le projet
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 // Main App Component
 const MainApp = () => {
