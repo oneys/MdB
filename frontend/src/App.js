@@ -1617,6 +1617,165 @@ const Estimateur = () => {
   );
 };
 
+// Composant Dataroom pour gestion des documents
+const DataroomPanel = ({ project }) => {
+  const [files, setFiles] = useState([
+    { id: 1, name: "Compromis_signé.pdf", type: "JURIDIQUE", size: "2.4 MB", date: "2025-01-18" },
+    { id: 2, name: "Diagnostic_technique.pdf", type: "TECHNIQUE", size: "1.8 MB", date: "2025-01-20" },
+    { id: 3, name: "Plan_financement.xlsx", type: "FINANCIER", size: "0.5 MB", date: "2025-01-22" }
+  ]);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    droppedFiles.forEach(file => {
+      const newFile = {
+        id: Date.now() + Math.random(),
+        name: file.name,
+        type: "ADMINISTRATIF", // Default category
+        size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+        date: new Date().toISOString().split('T')[0]
+      };
+      setFiles(prev => [...prev, newFile]);
+    });
+  };
+
+  const getCategoryColor = (type) => {
+    switch (type) {
+      case 'JURIDIQUE': return 'bg-blue-100 text-blue-700 border-blue-300';
+      case 'TECHNIQUE': return 'bg-green-100 text-green-700 border-green-300';
+      case 'FINANCIER': return 'bg-amber-100 text-amber-700 border-amber-300';
+      case 'ADMINISTRATIF': return 'bg-slate-100 text-slate-700 border-slate-300';
+      default: return 'bg-slate-100 text-slate-700 border-slate-300';
+    }
+  };
+
+  const getCategoryIcon = (type) => {
+    switch (type) {
+      case 'JURIDIQUE': return <FileText className="h-4 w-4" />;
+      case 'TECHNIQUE': return <Calculator className="h-4 w-4" />;
+      case 'FINANCIER': return <Euro className="h-4 w-4" />;
+      case 'ADMINISTRATIF': return <Upload className="h-4 w-4" />;
+      default: return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Zone de drop */}
+      <Card 
+        className={`border-2 border-dashed transition-colors ${
+          dragOver 
+            ? 'border-amber-400 bg-amber-50' 
+            : 'border-slate-300 bg-slate-50'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <CardContent className="pt-8 pb-8">
+          <div className="text-center">
+            <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-900 mb-2">
+              Glissez-déposez vos documents ici
+            </h3>
+            <p className="text-slate-500 mb-4">
+              Ou cliquez pour sélectionner des fichiers
+            </p>
+            <Button variant="outline">
+              <Upload className="h-4 w-4 mr-2" />
+              Choisir des fichiers
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Organisation par catégories */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {['JURIDIQUE', 'TECHNIQUE', 'FINANCIER', 'ADMINISTRATIF'].map(category => {
+          const categoryFiles = files.filter(f => f.type === category);
+          return (
+            <Card key={category}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  {getCategoryIcon(category)}
+                  {category}
+                  <Badge variant="secondary" className="ml-auto">
+                    {categoryFiles.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {categoryFiles.map(file => (
+                    <div key={file.id} className="p-2 bg-slate-50 rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-slate-900 truncate">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {file.size} • {new Date(file.date).toLocaleDateString('fr-FR')}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {categoryFiles.length === 0 && (
+                    <p className="text-xs text-slate-400 text-center py-4">
+                      Aucun document
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Actions d'export */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Export & Génération</CardTitle>
+          <CardDescription>Créer les dossiers pour partenaires</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Download className="h-4 w-4 mr-2" />
+              Dossier Banque PDF
+            </Button>
+            <Button className="bg-green-600 hover:bg-green-700">
+              <Download className="h-4 w-4 mr-2" />
+              Dossier Notaire PDF
+            </Button>
+            <Button variant="outline">
+              <Upload className="h-4 w-4 mr-2" />
+              Archive ZIP complète
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // Fiche Projet Simplifiée (pour l'instant)
 const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
   const [showEditProject, setShowEditProject] = useState(false);
