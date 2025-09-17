@@ -183,15 +183,18 @@ backend:
 frontend:
   - task: "Formulaire création projet"
     implemented: "unknown"
-    working: "unknown"
+    working: "NA"
     file: "App.js"
     stuck_count: 0  
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Interface visible mais composant ProjectForm non trouvé dans App.js"
+      - working: "NA"
+        agent: "testing"
+        comment: "Non testé - Authentification OAuth Google requise pour accéder à l'interface. Composant ProjectForm non visible dans le code actuel mais bouton 'Nouveau Projet' présent dans Pipeline."
 
   - task: "Estimateur UI fonctionnel"
     implemented: true
