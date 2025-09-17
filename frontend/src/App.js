@@ -1750,8 +1750,94 @@ const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
         </Card>
       </div>
 
-      {/* Panneaux détaillés de la Fiche Projet */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Navigation par onglets */}
+      <div className="mb-6">
+        <div className="border-b border-slate-200">
+          <nav className="-mb-px flex space-x-8">
+            {['overview', 'budget', 'tasks', 'dataroom', 'journal'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveProjectTab(tab)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeProjectTab === tab
+                    ? 'border-amber-500 text-amber-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {tab === 'overview' && 'Vue d\'ensemble'}
+                {tab === 'budget' && 'Budget & Écarts'}
+                {tab === 'tasks' && 'Tâches'}
+                {tab === 'dataroom' && 'Dataroom'}
+                {tab === 'journal' && 'Journal'}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Contenu selon l'onglet actif */}
+      {activeProjectTab === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Informations Financières</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Prix d'achat TTC</span>
+                  <span className="font-medium">{formatCurrency(project.prix_achat_ttc)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Travaux TTC</span>
+                  <span className="font-medium">{formatCurrency(project.travaux_ttc)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Frais agence TTC</span>
+                  <span className="font-medium">{formatCurrency(project.frais_agence_ttc)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Prix de vente cible</span>
+                  <span className="text-emerald-600">{formatCurrency(project.prix_vente_ttc)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Marge estimée</span>
+                  <span className="text-emerald-600">{formatCurrency(project.marge_estimee)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Jalons du Projet</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.entries(project.milestones || {}).map(([milestone, date]) => (
+                  <div key={milestone} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {date ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-slate-300" />
+                      )}
+                      <span className="capitalize">{milestone.replace('_', ' ')}</span>
+                    </div>
+                    <span className="text-sm text-slate-500">
+                      {date ? new Date(date).toLocaleDateString('fr-FR') : 'À prévoir'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {activeProjectTab === 'budget' && (
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Budget & Écarts */}
         <Card className="xl:col-span-2">
           <CardHeader>
