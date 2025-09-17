@@ -865,8 +865,8 @@ async def create_session(response: Response, session_id: str = Form(...)):
             value=session_data.session_token,
             max_age=7*24*60*60,
             httponly=True,
-            secure=True,
-            samesite="none",
+            secure=False,  # Set to False for development
+            samesite="lax",  # Changed from "none" to "lax" for better compatibility
             path="/"
         )
         
