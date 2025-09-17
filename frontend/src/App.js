@@ -183,8 +183,11 @@ const LoginPage = () => {
   }
 
   const handleGoogleLogin = () => {
-    const redirectUrl = encodeURIComponent(`${window.location.origin}/dashboard`);
-    window.location.href = `https://auth.emergentagent.com/?redirect=${redirectUrl}`;
+    const redirectUrl = `${window.location.origin}/dashboard`;
+    console.log("🔍 URL de redirection:", redirectUrl);
+    const oauthUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    console.log("🔍 URL OAuth complète:", oauthUrl);
+    window.location.href = oauthUrl;
   };
 
   return (
