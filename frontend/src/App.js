@@ -248,7 +248,14 @@ const LoginPage = () => {
               Continuer avec Microsoft
             </Button>
 
-            {/* Debug OAuth button removed - use real OAuth flow for production */}
+            {/* Temporary dev session button - remove in production */}
+            <Button 
+              onClick={handleDevSession}
+              variant="outline" 
+              className="w-full text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+            >
+              🧪 Session Développement (Temporaire)
+            </Button>
           </div>
           
           <div className="text-center text-xs text-slate-500">
