@@ -1,0 +1,63 @@
+{
+  "version": "2025-01-01",
+  "description": "Barème des frais de notaire - Émoluments, CSI et débours",
+  "last_updated": "2025-01-27",
+  "effective_date": "2025-01-01",
+  "legal_reference": "Décret n° 2020-1422 du 23 novembre 2020",
+  "emoluments_tranches": [
+    {
+      "min": 0,
+      "max": 6500,
+      "taux": 0.0380,
+      "description": "Première tranche: 0 € à 6 500 € - 3,80%"
+    },
+    {
+      "min": 6500,
+      "max": 17000,
+      "taux": 0.0244,
+      "description": "Deuxième tranche: 6 500 € à 17 000 € - 2,44%"
+    },
+    {
+      "min": 17000,
+      "max": 60000,
+      "taux": 0.0163,
+      "description": "Troisième tranche: 17 000 € à 60 000 € - 1,63%"
+    },
+    {
+      "min": 60000,
+      "max": null,
+      "taux": 0.0122,
+      "description": "Au-delà de 60 000 € - 1,22%"
+    }
+  ],
+  "additional_fees": {
+    "csi": {
+      "rate": 0.001,
+      "description": "Contribution de Sécurité Immobilière - 0,1%",
+      "legal_reference": "Art. 879 du CGI"
+    },
+    "debours_forfait": {
+      "amount": 800.0,
+      "description": "Débours forfaitaires (frais divers, formalités)",
+      "notes": "Montant forfaitaire standard pour actes simples"
+    }
+  },
+  "calculation_rules": {
+    "emoluments_include_vat": false,
+    "csi_calculated_on": "prix_achat_ttc",
+    "debours_fixed": true,
+    "rounding": "to_cent"
+  },
+  "historical_versions": [
+    {
+      "version": "2024-01-01",
+      "changes": "Mise à jour annuelle des taux",
+      "deprecated": false
+    },
+    {
+      "version": "2023-01-01", 
+      "changes": "Ajustement débours forfaitaires",
+      "deprecated": true
+    }
+  ]
+}
