@@ -563,6 +563,20 @@ class TaxCalculationService:
         self.notaire_baremes = self._load_notaire_baremes()
     
     def _load_dmto_rates(self):
+        """Load DMTO rates from JSON file with fallback to hardcoded values"""
+        try:
+            dmto_file_path = ROOT_DIR / 'data' / 'dmto.json'
+            if dmto_file_path.exists():
+                with open(dmto_file_path, 'r', encoding='utf-8') as f:
+                    dmto_data = json.load(f)
+                    logging.info(f"Loaded DMTO rates from JSON - Version: {dmto_data.get('version', 'unknown')}")
+                    return dmto_data
+            else:
+                logging.warning(f"DMTO JSON file not found at {dmto_file_path}, using fallback values")
+        except Exception as e:
+            logging.error(f"Error loading DMTO JSON file: {e}, using fallback values")
+        
+        # Fallback to hardcoded values
         return {
             "defaults": {"dmto_rate": 0.045, "dmto_mdb_rate": 0.00715},
             "departments": {
@@ -574,6 +588,27 @@ class TaxCalculationService:
         }
     
     def _load_notaire_baremes(self):
+        """Load notary fee scales from JSON file with fallback to hardcoded values"""
+        try:
+            notary_file_path = ROOT_DIR / 'data' / 'notary_fees.json'
+            if notary_file_path.exists():
+                with open(notary_file_path, 'r', encoding='utf-8') as f:
+                    notary_data = json.load(f)
+                    logging.info(f"Loaded notary fees from JSON - Version: {notary_data.get('version', 'unknown')}")
+                    
+                    # Restructure for compatibility with existing code
+                    return {
+                        "version": notary_data.get("version", "2025-01-01"),
+                        "emoluments_tranches": notary_data.get("emoluments_tranches", []),
+                        "csi_rate": notary_data.get("additional_fees", {}).get("csi", {}).get("rate", 0.001),
+                        "debours_forfait": notary_data.get("additional_fees", {}).get("debours_forfait", {}).get("amount", 800.0)
+                    }
+            else:
+                logging.warning(f"Notary fees JSON file not found at {notary_file_path}, using fallback values")
+        except Exception as e:
+            logging.error(f"Error loading notary fees JSON file: {e}, using fallback values")
+        
+        # Fallback to hardcoded values
         return {
             "version": "2025-01-01",
             "emoluments_tranches": [
