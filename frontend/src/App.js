@@ -1937,6 +1937,22 @@ const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
           </div>
         </CardContent>
       </Card>
+      {/* Modal d'édition de projet */}
+      {showEditProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Modifier le projet</h2>
+            <ProjectEditForm 
+              project={project}
+              onClose={() => setShowEditProject(false)}
+              onUpdate={(updatedProject) => {
+                onProjectUpdate && onProjectUpdate(updatedProject);
+                setShowEditProject(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
