@@ -2203,6 +2203,7 @@ const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Actions */}
       <Card>
