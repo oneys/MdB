@@ -190,6 +190,13 @@ const LoginPage = () => {
     window.location.href = oauthUrl;
   };
 
+  const handleTestReturn = () => {
+    // Simulate OAuth return for testing
+    const testUrl = `${window.location.origin}/dashboard#session_id=test_${Date.now()}`;
+    console.log("🧪 Test OAuth return:", testUrl);
+    window.location.href = testUrl;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -238,6 +245,15 @@ const LoginPage = () => {
                 <path d="m12.005 6.545c1.396 0 2.65.496 3.613 1.459l2.707-2.707c-1.637-1.52-3.773-2.451-6.32-2.451-3.918 0-7.234 2.403-8.653 5.818l3.145 2.441c.739-2.197 2.777-3.787 5.205-3.787z"/>
               </svg>
               Continuer avec Microsoft
+            </Button>
+
+            {/* Debug button - remove in production */}
+            <Button 
+              onClick={handleTestReturn}
+              variant="outline" 
+              className="w-full text-xs text-slate-500 border-dashed"
+            >
+              🧪 Test OAuth Return (Debug)
             </Button>
           </div>
           
