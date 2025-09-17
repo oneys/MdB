@@ -720,6 +720,162 @@ const Dashboard = ({ projects, onProjectSelect }) => {
   }
 };
 
+// Composant de création de projet
+const ProjectCreateForm = ({ onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    label: '',
+    address: {
+      line1: '',
+      city: '',
+      dept: '75'
+    },
+    regime_tva: 'MARGE',
+    prix_achat_ttc: 0,
+    prix_vente_ttc: 0,
+    travaux_ttc: 0,
+    frais_agence_ttc: 0
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const newProject = {
+      id: `project_${Date.now()}`,
+      ...formData,
+      status: 'DETECTE',
+      marge_estimee: formData.prix_vente_ttc - formData.prix_achat_ttc - formData.travaux_ttc - formData.frais_agence_ttc,
+      tri_estime: 0.15,
+      flags: {},
+      milestones: {},
+      financing: {},
+      owner_id: 'current_user',
+      team_members: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    onSubmit(newProject);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="project-name">Nom du projet</Label>
+        <Input
+          id="project-name"
+          value={formData.label}
+          onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
+          placeholder="Ex: Rénovation Appartement Paris 11e"
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="address">Adresse</Label>
+          <Input
+            id="address"
+            value={formData.address.line1}
+            onChange={(e) => setFormData(prev => ({ 
+              ...prev, 
+              address: { ...prev.address, line1: e.target.value }
+            }))}
+            placeholder="123 rue de la Paix"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="city">Ville</Label>
+          <Input
+            id="city"
+            value={formData.address.city}
+            onChange={(e) => setFormData(prev => ({ 
+              ...prev, 
+              address: { ...prev.address, city: e.target.value }
+            }))}
+            placeholder="Paris"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="dept-create">Département</Label>
+          <Select 
+            value={formData.address.dept} 
+            onValueChange={(value) => setFormData(prev => ({ 
+              ...prev, 
+              address: { ...prev.address, dept: value }
+            }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="75">75 - Paris</SelectItem>
+              <SelectItem value="92">92 - Hauts-de-Seine</SelectItem>
+              <SelectItem value="93">93 - Seine-Saint-Denis</SelectItem>
+              <SelectItem value="94">94 - Val-de-Marne</SelectItem>
+              <SelectItem value="95">95 - Val-d'Oise</SelectItem>
+              <SelectItem value="69">69 - Rhône</SelectItem>
+              <SelectItem value="13">13 - Bouches-du-Rhône</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="regime-create">Régime TVA</Label>
+          <Select 
+            value={formData.regime_tva} 
+            onValueChange={(value) => setFormData(prev => ({ ...prev, regime_tva: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MARGE">TVA sur marge</SelectItem>
+              <SelectItem value="NORMAL">TVA normale</SelectItem>
+              <SelectItem value="EXO">Exonération</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="prix-achat-create">Prix d'achat TTC</Label>
+          <Input
+            id="prix-achat-create"
+            type="number"
+            value={formData.prix_achat_ttc}
+            onChange={(e) => setFormData(prev => ({ ...prev, prix_achat_ttc: parseFloat(e.target.value) || 0 }))}
+            placeholder="300000"
+          />
+        </div>
+        <div>
+          <Label htmlFor="prix-vente-create">Prix de vente TTC</Label>
+          <Input
+            id="prix-vente-create"
+            type="number"
+            value={formData.prix_vente_ttc}
+            onChange={(e) => setFormData(prev => ({ ...prev, prix_vente_ttc: parseFloat(e.target.value) || 0 }))}
+            placeholder="520000"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Annuler
+        </Button>
+        <Button type="submit" className="bg-amber-600 hover:bg-amber-700">
+          Créer le projet
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 // Pipeline Component (with role-based access)
 const Pipeline = ({ projects, onProjectSelect }) => {
   const { user } = useAuth();
