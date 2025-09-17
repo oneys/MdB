@@ -947,6 +947,45 @@ async def logout(response: Response, session_token: Optional[str] = Cookie(None,
     )
     return {"message": "Logged out successfully"}
 
+@api_router.post("/auth/dev-session")
+async def create_dev_session(response: Response):
+    """Temporary endpoint for development authentication bypass"""
+    try:
+        # Check if test user exists
+        test_user_data = await db.users.find_one({"email": "test@marchands-de-biens.dev"})
+        if not test_user_data:
+            return {"error": "Test user not found. Run temp_bypass.py first"}
+        
+        # Get existing session
+        session_data = await db.user_sessions.find_one({"user_id": test_user_data["id"]})
+        if not session_data:
+            return {"error": "Test session not found. Run temp_bypass.py first"}
+        
+        # Set session cookie
+        response.set_cookie(
+            key="session_token",
+            value=session_data["session_token"],
+            max_age=7*24*60*60,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            path="/"
+        )
+        
+        logging.info(f"Dev session activated for: {test_user_data['email']}")
+        return {
+            "message": "Development session activated",
+            "user": {
+                "email": test_user_data["email"],
+                "name": test_user_data["name"],
+                "role": test_user_data["role"]
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Dev session error: {e}")
+        raise HTTPException(status_code=500, detail="Dev session creation failed")
+
 # KYC Endpoints
 @api_router.post("/kyc/documents/upload")
 async def upload_kyc_document(
