@@ -1052,6 +1052,7 @@ const Pipeline = ({ projects, onProjectSelect }) => {
   const { user } = useAuth();
   const [localProjects, setLocalProjects] = useState(projects);
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Filter projects based on user access
   const getAccessibleProjects = () => {
