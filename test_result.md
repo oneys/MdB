@@ -234,5 +234,7 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Phase 1 - Audit initial terminé. Estimateur UI présent, backend partiellement implémenté. Manque barèmes JSON et tests des cas spécifiques. Prêt pour tests backend puis frontend."
+  - agent: "main"
+    message: "PHASE 1 COMPLÉTÉE - Backend 100% validé (3 cas tests), barèmes JSON créés, accès OAuth débloqué. Bouton debug supprimé, OAuth réel fonctionnel. Prêt pour tests frontend et Phase 2."
   - agent: "testing"
     message: "✅ PHASE 1 TESTS BACKEND TERMINÉS AVEC SUCCÈS - Estimateur fiscal fonctionne parfaitement! Tous les 3 cas de test spécifiques passent: TVA sur marge MdB (0,715% DMTO), TVA normale, Exonération. API /estimate/run retourne tous les champs requis avec explications détaillées. Projets API sécurisés (auth requise). Backend prêt pour production."
