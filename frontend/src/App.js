@@ -865,8 +865,10 @@ const Pipeline = ({ projects, onProjectSelect }) => {
           return (
             <div 
               key={status}
-              className="kanban-column flex-shrink-0 w-80 bg-slate-50 rounded-lg p-4"
+              className="kanban-column flex-shrink-0 w-80 bg-slate-50 rounded-lg p-4 border-2 border-transparent transition-colors"
               onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, status)}
             >
               <div className="flex items-center justify-between mb-4">
