@@ -851,7 +851,10 @@ const Pipeline = ({ projects, onProjectSelect }) => {
           </p>
         </div>
         {canCreateProject && (
-          <Button className="bg-amber-600 hover:bg-amber-700">
+          <Button 
+            onClick={() => setShowCreateProject(true)}
+            className="bg-amber-600 hover:bg-amber-700"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau Projet
           </Button>
