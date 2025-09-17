@@ -42,7 +42,8 @@ import {
   LogOut,
   User,
   Settings,
-  Shield
+  Shield,
+  X
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
