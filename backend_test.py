@@ -39,6 +39,12 @@ class TaxCalculationAPITester:
             if success:
                 print(f"✅ Status Code: {response.status_code} - PASSED")
                 
+                # Print response data for estimator tests
+                if "estimate" in endpoint and response_data:
+                    print(f"   Response fields: {list(response_data.keys())}")
+                    if 'explain' in response_data:
+                        print(f"   Explain length: {len(response_data['explain'])} chars")
+                
                 # Additional response validation if provided
                 if validate_response and callable(validate_response):
                     validation_result = validate_response(response_data)
