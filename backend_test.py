@@ -230,11 +230,9 @@ class TaxCalculationAPITester:
             "regime_tva": "EXO",
             "prix_achat_ttc": 250000,
             "prix_vente_ttc": 310000,
-            "travaux_ttc": 0,
-            "frais_agence_ttc": 0,
-            "hypotheses": {
-                "md_b_0715_ok": False
-            }
+            "travaux_ttc": 20000,
+            "frais_agence_ttc": 5000,
+            "hypotheses": {}
         }
         
         return self.run_test(
