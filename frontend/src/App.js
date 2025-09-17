@@ -1380,12 +1380,18 @@ const MainApp = () => {
       
       <div className="max-w-7xl mx-auto p-6">
         {selectedProject ? (
-          <div>Fiche Projet: {selectedProject.label}</div>
+          <FicheProjet 
+            project={selectedProject} 
+            onBack={() => {
+              setSelectedProject(null);
+              setActiveTab("dashboard");
+            }}
+          />
         ) : (
           <>
             {activeTab === "dashboard" && <Dashboard projects={projects} onProjectSelect={handleProjectSelect} />}
             {activeTab === "pipeline" && <Pipeline projects={projects} onProjectSelect={handleProjectSelect} />}
-            {activeTab === "estimateur" && <div>Estimateur (Public Access)</div>}
+            {activeTab === "estimateur" && <Estimateur />}
           </>
         )}
       </div>
