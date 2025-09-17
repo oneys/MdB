@@ -101,3 +101,122 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Stabiliser la création/gestion de projets et rendre l'estimateur fiscal pleinement fonctionnel avec 3 régimes (NORMAL/MARGE/EXO), DMTO MdB 0,715%, barèmes notaire, calculs auditables."
+
+backend:
+  - task: "Création de projets"
+    implemented: true
+    working: "unknown"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "Endpoints POST /projects existant, à vérifier la fonctionnalité complète"
+
+  - task: "Estimateur fiscal 3 régimes"
+    implemented: true
+    working: "unknown"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "Classe TaxCalculationService présente, logic 3 régimes implémentée, à tester avec cas spécifiques"
+
+  - task: "DMTO MdB 0,715%"
+    implemented: true
+    working: "unknown"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown" 
+        agent: "main"
+        comment: "Logic DMTO avec taux MdB 0,715% présente dans calculate_dmto, à valider"
+
+  - task: "Barèmes notaire JSON"
+    implemented: false
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Barèmes hardcodés dans le code. Manque fichiers JSON versionnés dmto.json et notary_fees.json"
+
+  - task: "API /estimate/run"
+    implemented: true
+    working: "unknown"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "Endpoint présent ligne 1300+, à tester avec les 3 cas spécifiques"
+
+frontend:
+  - task: "Formulaire création projet"
+    implemented: "unknown"
+    working: "unknown"
+    file: "App.js"
+    stuck_count: 0  
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "Interface visible mais composant ProjectForm non trouvé dans App.js"
+
+  - task: "Estimateur UI fonctionnel"
+    implemented: true
+    working: "unknown"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high" 
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "Composant Estimateur présent lignes 903-1208, interface complète, à tester"
+
+  - task: "Liste projets Dashboard"
+    implemented: true
+    working: "unknown"
+    file: "App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "Dashboard avec liste projets implémenté, utilise mockProjects, à connecter API"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "API /estimate/run avec 3 cas tests"
+    - "Création projet API/UI"
+    - "Barèmes JSON versionnés"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Phase 1 - Audit initial terminé. Estimateur UI présent, backend partiellement implémenté. Manque barèmes JSON et tests des cas spécifiques. Prêt pour tests backend puis frontend."
