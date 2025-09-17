@@ -60,10 +60,13 @@ const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
+      console.log("🔍 Vérification authentification...");
       const response = await axios.get(`${API}/auth/me`, { withCredentials: true });
+      console.log("✅ Utilisateur authentifié:", response.data);
       setUser(response.data);
       setIsAuthenticated(true);
     } catch (error) {
+      console.log("❌ Utilisateur non authentifié:", error.response?.status);
       setUser(null);
       setIsAuthenticated(false);
     } finally {
