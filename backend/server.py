@@ -1137,8 +1137,12 @@ async def get_projects(current_user: User = Depends(require_auth)):
 @api_router.post("/projects", response_model=Project)
 async def create_project(
     project_data: ProjectCreate,
-    current_user: User = Depends(require_role([UserRole.OWNER, UserRole.PM]))
+    current_user: User = Depends(require_auth)
 ):
+    """Create new project (Owner and PM only)"""
+    if current_user.role not in [UserRole.OWNER, UserRole.PM]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
     project_dict = project_data.dict()
     project_dict["owner_id"] = current_user.id
     project_dict["team_members"] = [current_user.id]
