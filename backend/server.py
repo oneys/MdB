@@ -470,11 +470,18 @@ class AuthenticationService:
                 headers = {"X-Session-ID": session_id}
                 url = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
                 
+                logging.info(f"Validating session with Emergent: {url}")
                 async with session.get(url, headers=headers) as response:
+                    response_text = await response.text()
+                    logging.info(f"Emergent response status: {response.status}")
+                    
                     if response.status == 200:
                         data = await response.json()
+                        logging.info(f"Session validated successfully for: {data.get('email', 'unknown')}")
                         return SessionData(**data)
-                    return None
+                    else:
+                        logging.warning(f"Session validation failed. Status: {response.status}, Response: {response_text[:200]}")
+                        return None
         except Exception as e:
             logging.error(f"Error getting session data: {e}")
             return None
