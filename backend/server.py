@@ -1035,9 +1035,12 @@ async def get_tracfin_events(
 @api_router.post("/tracfin/events", response_model=TracfinEvent)
 async def create_tracfin_event(
     event_data: TracfinEventCreate,
-    current_user: User = Depends(require_role([UserRole.OWNER, UserRole.PM]))
+    current_user: User = Depends(require_auth)
 ):
     """Create TRACFIN event manually (Owner/PM only)"""
+    if current_user.role not in [UserRole.OWNER, UserRole.PM]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
     return await tracfin_service.create_event(event_data)
 
 # Risk Assessment Endpoints
