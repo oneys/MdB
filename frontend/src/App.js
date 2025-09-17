@@ -253,14 +253,7 @@ const LoginPage = () => {
               Continuer avec Microsoft
             </Button>
 
-            {/* Debug button - remove in production */}
-            <Button 
-              onClick={handleTestReturn}
-              variant="outline" 
-              className="w-full text-xs text-slate-500 border-dashed"
-            >
-              🧪 Test OAuth Return (Debug)
-            </Button>
+            {/* Debug OAuth button removed - use real OAuth flow for production */}
           </div>
           
           <div className="text-center text-xs text-slate-500">
