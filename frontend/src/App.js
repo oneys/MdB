@@ -1178,15 +1178,24 @@ const Pipeline = ({ projects, onProjectSelect }) => {
             }
           </p>
         </div>
-        {canCreateProject && (
+        <div className="flex gap-4">
+          {canCreateProject && (
+            <Button 
+              onClick={() => setShowCreateProject(true)}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau Projet
+            </Button>
+          )}
           <Button 
-            onClick={() => setShowCreateProject(true)}
-            className="bg-amber-600 hover:bg-amber-700"
+            variant="outline"
+            onClick={() => setShowAnalytics(true)}
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau Projet
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
           </Button>
-        )}
+        </div>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-4">
