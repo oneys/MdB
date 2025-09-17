@@ -1620,6 +1620,7 @@ const Estimateur = () => {
 // Fiche Projet Simplifiée (pour l'instant)
 const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
   const [showEditProject, setShowEditProject] = useState(false);
+  const [activeProjectTab, setActiveProjectTab] = useState('overview');
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
