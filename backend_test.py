@@ -288,6 +288,55 @@ class TaxCalculationAPITester:
         
         return success_get and success_post
 
+    def validate_all_required_fields(self, response_data):
+        """Validate all required fields are present in estimate response"""
+        required_fields = [
+            'dmto', 'emoluments', 'csi', 'debours', 
+            'tva_collectee', 'tva_marge', 'marge_brute', 
+            'marge_nette', 'tri', 'explain'
+        ]
+        
+        missing_fields = []
+        for field in required_fields:
+            if field not in response_data:
+                missing_fields.append(field)
+        
+        if missing_fields:
+            return {"valid": False, "message": f"Missing required fields: {', '.join(missing_fields)}"}
+        
+        # Check numeric fields are numbers
+        numeric_fields = ['dmto', 'emoluments', 'csi', 'debours', 'tva_collectee', 'tva_marge', 'marge_brute', 'marge_nette', 'tri']
+        for field in numeric_fields:
+            if not isinstance(response_data[field], (int, float)):
+                return {"valid": False, "message": f"Field {field} should be numeric, got {type(response_data[field])}"}
+        
+        # Check explain is string and not empty
+        if not isinstance(response_data['explain'], str) or len(response_data['explain']) < 10:
+            return {"valid": False, "message": f"Field 'explain' should be a non-empty string, got {len(response_data.get('explain', ''))} chars"}
+        
+        return {"valid": True, "message": f"All {len(required_fields)} required fields present and valid"}
+
+    def test_comprehensive_field_validation(self):
+        """Test that all required fields are present in response"""
+        data = {
+            "dept": "75",
+            "regime_tva": "MARGE",
+            "prix_achat_ttc": 300000,
+            "prix_vente_ttc": 520000,
+            "travaux_ttc": 80000,
+            "frais_agence_ttc": 15000,
+            "hypotheses": {"md_b_0715_ok": True}
+        }
+        
+        return self.run_test(
+            "Comprehensive Field Validation",
+            "POST",
+            "estimate/run",
+            200,
+            data=data,
+            validate_response=self.validate_all_required_fields
+        )
+
     def print_summary(self):
         """Print test summary"""
         print(f"\n" + "="*60)
