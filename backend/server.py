@@ -956,9 +956,12 @@ async def validate_kyc_document(
     document_id: str,
     status: KYCStatus,
     notes: Optional[str] = None,
-    current_user: User = Depends(require_role([UserRole.OWNER, UserRole.PM]))
+    current_user: User = Depends(require_auth)
 ):
     """Validate KYC document (Owner/PM only)"""
+    if current_user.role not in [UserRole.OWNER, UserRole.PM]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
     result = await db.kyc_documents.update_one(
         {"id": document_id},
         {
