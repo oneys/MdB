@@ -890,7 +890,12 @@ async def logout(response: Response, session_token: Optional[str] = Cookie(None,
     if session_token:
         await auth_service.logout_user(session_token)
     
-    response.delete_cookie(key="session_token", path="/", secure=True, samesite="none")
+    response.delete_cookie(
+        key="session_token",
+        path="/",
+        secure=False,
+        samesite="lax"
+    )
     return {"message": "Logged out successfully"}
 
 # KYC Endpoints
