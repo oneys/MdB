@@ -1,0 +1,73 @@
+{
+  "version": "2025-01-01",
+  "description": "Droits de mutation à titre onéreux (DMTO) par département",
+  "last_updated": "2025-01-27",
+  "defaults": {
+    "dmto_rate": 0.045,
+    "dmto_mdb_rate": 0.00715,
+    "description": "Taux standard 4.5% et taux marchand de biens 0.715%"
+  },
+  "departments": {
+    "75": {
+      "name": "Paris",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard Île-de-France"
+    },
+    "92": {
+      "name": "Hauts-de-Seine", 
+      "dmto_rate": 0.045,
+      "notes": "Taux standard Île-de-France"
+    },
+    "93": {
+      "name": "Seine-Saint-Denis",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard Île-de-France"
+    },
+    "94": {
+      "name": "Val-de-Marne",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard Île-de-France"
+    },
+    "95": {
+      "name": "Val-d'Oise",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard Île-de-France"
+    },
+    "69": {
+      "name": "Rhône",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard métropole"
+    },
+    "13": {
+      "name": "Bouches-du-Rhône",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard métropole"
+    },
+    "33": {
+      "name": "Gironde",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard métropole"
+    },
+    "59": {
+      "name": "Nord",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard métropole"
+    },
+    "31": {
+      "name": "Haute-Garonne",
+      "dmto_rate": 0.045,
+      "notes": "Taux standard métropole"
+    }
+  },
+  "special_conditions": {
+    "marchand_de_biens": {
+      "eligible_conditions": [
+        "Activité principale de marchand de biens déclarée",
+        "Bien acquis dans le cadre de l'activité professionnelle",
+        "Intention de revente dans les 5 ans"
+      ],
+      "rate": 0.00715,
+      "legal_reference": "Art. 1594 F quinquies du CGI"
+    }
+  }
+}
