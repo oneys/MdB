@@ -1447,7 +1447,9 @@ const Estimateur = () => {
 };
 
 // Fiche Projet Simplifiée (pour l'instant)
-const FicheProjet = ({ project, onBack }) => {
+const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
+  const [showEditProject, setShowEditProject] = useState(false);
+  
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
