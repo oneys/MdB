@@ -2141,9 +2141,7 @@ const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
       )}
 
       {activeProjectTab === 'journal' && (
-
-      {/* Journal d'événements */}
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
