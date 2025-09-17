@@ -127,6 +127,7 @@ const SessionHandler = ({ children }) => {
   const { authenticateWithSession, isAuthenticated } = useAuth();
   const [processing, setProcessing] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleSessionId = async () => {
@@ -136,20 +137,24 @@ const SessionHandler = ({ children }) => {
       if (sessionIdMatch && !isAuthenticated && !processing) {
         setProcessing(true);
         const sessionId = sessionIdMatch[1];
+        console.log("🔍 Session ID trouvé:", sessionId);
         
         const success = await authenticateWithSession(sessionId);
         if (success) {
+          console.log("✅ Authentification réussie, redirection vers dashboard");
           // Clean URL fragment
           window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-          window.location.href = "/dashboard";
+          navigate("/dashboard", { replace: true });
         } else {
-          window.location.href = "/login";
+          console.log("❌ Authentification échouée, redirection vers login");
+          navigate("/login", { replace: true });
         }
+        setProcessing(false);
       }
     };
 
     handleSessionId();
-  }, [location, isAuthenticated, authenticateWithSession, processing]);
+  }, [location, isAuthenticated, authenticateWithSession, processing, navigate]);
 
   if (processing) {
     return (
