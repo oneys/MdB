@@ -753,14 +753,36 @@ const Pipeline = ({ projects, onProjectSelect }) => {
       return;
     }
     e.dataTransfer.setData('text/plain', projectId);
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Add visual feedback
+    setTimeout(() => {
+      e.target.style.opacity = '0.5';
+    }, 0);
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.style.opacity = '1';
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e, newStatus) => {
+  const handleDragEnter = (e) => {
     e.preventDefault();
+    e.currentTarget.classList.add('bg-amber-50', 'border-amber-300');
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('bg-amber-50', 'border-amber-300');
+  };
+
+  const handleDrop = async (e, newStatus) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('bg-amber-50', 'border-amber-300');
     
     // Only allow drop if user has write access
     if (user?.role === 'INVITE') {
@@ -768,14 +790,38 @@ const Pipeline = ({ projects, onProjectSelect }) => {
     }
     
     const projectId = e.dataTransfer.getData('text/plain');
+    const draggedProject = localProjects.find(p => p.id === projectId);
     
+    if (!draggedProject || draggedProject.status === newStatus) {
+      return;
+    }
+    
+    // Optimistic update
     setLocalProjects(prev => 
       prev.map(project => 
         project.id === projectId 
-          ? { ...project, status: newStatus }
+          ? { ...project, status: newStatus, updated_at: new Date().toISOString() }
           : project
       )
     );
+    
+    // Log the status change (simulate API call)
+    console.log(`📝 Projet "${draggedProject.label}" déplacé de ${draggedProject.status} vers ${newStatus}`);
+    
+    // Here you would typically make an API call to update the backend
+    // try {
+    //   await axios.patch(`${API}/projects/${projectId}`, { status: newStatus }, { withCredentials: true });
+    // } catch (error) {
+    //   console.error('Error updating project status:', error);
+    //   // Revert on error
+    //   setLocalProjects(prev => 
+    //     prev.map(project => 
+    //       project.id === projectId 
+    //         ? { ...project, status: draggedProject.status }
+    //         : project
+    //     )
+    //   );
+    // }
   };
 
   const getProjectsByStatus = (status) => {
