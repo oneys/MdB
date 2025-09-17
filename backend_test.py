@@ -209,11 +209,9 @@ class TaxCalculationAPITester:
             "regime_tva": "NORMAL",
             "prix_achat_ttc": 240000,
             "prix_vente_ttc": 360000,
-            "travaux_ttc": 0,
-            "frais_agence_ttc": 0,
-            "hypotheses": {
-                "md_b_0715_ok": False
-            }
+            "travaux_ttc": 30000,
+            "frais_agence_ttc": 10000,
+            "hypotheses": {}
         }
         
         return self.run_test(
