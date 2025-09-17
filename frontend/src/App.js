@@ -1754,7 +1754,10 @@ const FicheProjet = ({ project, onBack }) => {
               <Download className="h-4 w-4 mr-2" />
               Dossier Notaire
             </Button>
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={() => setShowEditProject(true)}
+            >
               <Edit className="h-4 w-4 mr-2" />
               Modifier le projet
             </Button>
