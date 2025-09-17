@@ -1317,6 +1317,21 @@ const Pipeline = ({ projects, onProjectSelect }) => {
           </div>
         </div>
       )}
+
+      {/* Modal d'analytics */}
+      {showAnalytics && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-900">Analytics & Graphiques</h2>
+              <Button variant="ghost" onClick={() => setShowAnalytics(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <AnalyticsPanel projects={localProjects} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
