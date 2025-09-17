@@ -888,10 +888,14 @@ async def root():
 @api_router.post("/auth/session")
 async def create_session(response: Response, session_id: str = Form(...)):
     try:
+        logging.info(f"Attempting session creation with session_id: {session_id[:20]}...")
         session_data = await auth_service.get_session_data_from_emergent(session_id)
+        
         if not session_data:
+            logging.warning(f"No session data returned for session_id: {session_id[:20]}...")
             raise HTTPException(status_code=400, detail="Invalid session ID")
         
+        logging.info(f"Session data received for user: {session_data.email}")
         user = await auth_service.create_or_get_user(session_data)
         user_session = await auth_service.create_user_session(user.id, session_data.session_token)
         
@@ -905,11 +909,14 @@ async def create_session(response: Response, session_id: str = Form(...)):
             path="/"
         )
         
+        logging.info(f"Session created successfully for user: {user.email}")
         return {
             "user": user.dict(),
             "session_expires": user_session.expires_at.isoformat()
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Session creation error: {e}")
         raise HTTPException(status_code=500, detail="Session creation failed")
