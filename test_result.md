@@ -225,9 +225,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "API /estimate/run avec 3 cas tests"
-    - "Création projet API/UI"
-    - "Barèmes JSON versionnés"
+    - "Frontend UI testing (si nécessaire)"
+    - "Barèmes JSON versionnés (amélioration future)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
