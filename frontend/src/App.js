@@ -196,7 +196,26 @@ const LoginPage = () => {
     window.location.href = oauthUrl;
   };
 
-  // Debug function removed - use real OAuth flow for production
+  // Temporary dev session function
+  const handleDevSession = async () => {
+    try {
+      const response = await axios.post(`${API}/auth/dev-session`, {}, { withCredentials: true });
+      if (response.data.user) {
+        const userData = {
+          id: "test-user-12345",
+          email: response.data.user.email,
+          name: response.data.user.name,
+          role: response.data.user.role,
+          session_token: "dev_session"
+        };
+        login(userData);
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Dev session error:', error);
+      alert('Session de développement échouée. Vérifiez les logs backend.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
