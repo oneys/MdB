@@ -1933,6 +1933,54 @@ const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
           </CardContent>
         </Card>
       </div>
+      )}
+
+      {activeProjectTab === 'tasks' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Tâches
+            </CardTitle>
+            <CardDescription>To-do et jalons du projet</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              { id: 1, title: "Compromis de vente", status: "completed", due: "2025-01-15" },
+              { id: 2, title: "Demande permis travaux", status: "in_progress", due: "2025-02-01" },
+              { id: 3, title: "Devis entreprises", status: "pending", due: "2025-02-15" },
+              { id: 4, title: "Début travaux", status: "pending", due: "2025-03-01" },
+              { id: 5, title: "Fin travaux", status: "pending", due: "2025-06-01" }
+            ].map((task) => (
+              <div key={task.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  {task.status === 'completed' ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : task.status === 'in_progress' ? (
+                    <Clock className="h-4 w-4 text-amber-500" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-slate-300" />
+                  )}
+                  <span className={`text-sm ${task.status === 'completed' ? 'line-through text-slate-500' : ''}`}>
+                    {task.title}
+                  </span>
+                </div>
+                <span className="text-xs text-slate-500">{new Date(task.due).toLocaleDateString('fr-FR')}</span>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" className="w-full mt-3">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter une tâche
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeProjectTab === 'dataroom' && (
+        <DataroomPanel project={project} />
+      )}
+
+      {activeProjectTab === 'journal' && (
 
       {/* Journal d'événements */}
       <Card>
