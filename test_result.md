@@ -213,15 +213,18 @@ frontend:
 
   - task: "Liste projets Dashboard"
     implemented: true
-    working: "unknown"
+    working: "NA"
     file: "App.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Dashboard avec liste projets implémenté, utilise mockProjects, à connecter API"
+      - working: "NA"
+        agent: "testing"
+        comment: "Non testé - Authentification OAuth Google requise pour accéder au dashboard. Code implémenté avec mockProjects et gestion des rôles utilisateur (OWNER, PM, ANALYSTE, INVITE)."
 
 metadata:
   created_by: "main_agent"
