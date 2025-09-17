@@ -90,6 +90,7 @@ class TaxCalculationAPITester:
             tva_marge = response_data.get('tva_marge', 0)
             marge_nette = response_data.get('marge_nette', 0)
             tri = response_data.get('tri', 0)
+            explain = response_data.get('explain', '')
             
             # Validate DMTO MdB rate (0.715%)
             expected_dmto = 300000 * 0.00715
@@ -113,7 +114,15 @@ class TaxCalculationAPITester:
             if marge_nette <= 0:
                 return {"valid": False, "message": f"Marge nette should be positive, got {marge_nette:.2f}€"}
             
-            return {"valid": True, "message": f"All calculations valid - DMTO: {dmto:.2f}€, TVA marge: {tva_marge:.2f}€, Marge nette: {marge_nette:.2f}€"}
+            # Check for detailed explanation
+            if not explain or len(explain) < 100:
+                return {"valid": False, "message": f"Explain should be detailed, got: {len(explain)} characters"}
+            
+            # Check for warnings about travaux structurants
+            if "travaux structurants" not in explain.lower() and "décennale" not in explain.lower():
+                return {"valid": False, "message": "Missing warning about travaux structurants/garantie décennale"}
+            
+            return {"valid": True, "message": f"All calculations valid - DMTO: {dmto:.2f}€, TVA marge: {tva_marge:.2f}€, Marge nette: {marge_nette:.2f}€, Warnings present"}
             
         except Exception as e:
             return {"valid": False, "message": f"Validation error: {str(e)}"}
