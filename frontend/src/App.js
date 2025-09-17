@@ -85,19 +85,23 @@ const AuthProvider = ({ children }) => {
 
   const authenticateWithSession = async (sessionId) => {
     try {
+      console.log("🔍 Début authentification avec session ID:", sessionId);
       const formData = new FormData();
       formData.append('session_id', sessionId);
       
+      console.log("🔍 Appel API /auth/session...");
       const response = await axios.post(`${API}/auth/session`, formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
+      console.log("✅ Réponse API reçue:", response.data);
       setUser(response.data.user);
       setIsAuthenticated(true);
       return true;
     } catch (error) {
-      console.error("Session authentication failed:", error);
+      console.error("❌ Erreur authentification session:", error);
+      console.error("❌ Détails erreur:", error.response?.data);
       return false;
     }
   };
