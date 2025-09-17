@@ -110,6 +110,7 @@ const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    console.log("🔍 Initialisation de l'application...");
     checkAuth();
   }, []);
 
