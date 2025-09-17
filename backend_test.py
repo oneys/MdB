@@ -188,7 +188,8 @@ class TaxCalculationAPITester:
             "travaux_ttc": 80000,
             "frais_agence_ttc": 15000,
             "hypotheses": {
-                "md_b_0715_ok": True
+                "md_b_0715_ok": True,
+                "travaux_structurants": True
             }
         }
         
