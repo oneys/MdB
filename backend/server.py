@@ -325,6 +325,29 @@ class ProjectUpdate(BaseModel):
     milestones: Optional[Dict[str, Optional[str]]] = None
     financing: Optional[Dict[str, Any]] = None
 
+class ProjectResponse(BaseModel):
+    id: str
+    label: str
+    address: Dict[str, str] = Field(default_factory=dict)
+    status: ProjectStatus = ProjectStatus.DETECTE
+    regime_tva: RegimeTVA = RegimeTVA.MARGE
+    prix_achat_ttc: float = 0
+    prix_vente_ttc: float = 0
+    travaux_ttc: float = 0
+    frais_agence_ttc: float = 0
+    marge_estimee: float = 0
+    tri_estime: float = 0
+    flags: Dict[str, bool] = Field(default_factory=dict)
+    milestones: Dict[str, Optional[str]] = Field(default_factory=dict)
+    financing: Dict[str, Any] = Field(default_factory=dict)
+    owner_id: Optional[str] = None
+    team_members: List[str] = Field(default_factory=list)
+    documents: List[Dict[str, Any]] = Field(default_factory=list)
+    tasks: List[Dict[str, Any]] = Field(default_factory=list)
+    events: List[Dict[str, Any]] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Risk Assessment Service
 class RiskAssessmentService:
     @staticmethod
