@@ -1936,6 +1936,36 @@ const DataroomPanel = ({ project }) => {
 const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
   const [showEditProject, setShowEditProject] = useState(false);
   const [activeProjectTab, setActiveProjectTab] = useState('overview');
+  const [projectEvents, setProjectEvents] = useState([
+    {
+      id: 1,
+      type: "project_created",
+      description: "Projet créé",
+      user: "Test User - Dev",
+      timestamp: project.created_at || new Date().toISOString(),
+      icon: <Plus className="h-4 w-4 text-slate-500" />
+    }
+  ]);
+
+  const addEvent = (type, description) => {
+    const newEvent = {
+      id: Date.now(),
+      type,
+      description,
+      user: "Test User - Dev",
+      timestamp: new Date().toISOString(),
+      icon: type === 'status_change' ? <ArrowRight className="h-4 w-4 text-blue-500" /> :
+            type === 'budget_update' ? <Euro className="h-4 w-4 text-amber-500" /> :
+            type === 'document_upload' ? <Upload className="h-4 w-4 text-green-500" /> :
+            <Edit className="h-4 w-4 text-slate-500" />
+    };
+    setProjectEvents(prev => [newEvent, ...prev]);
+  };
+
+  const handleProjectEdit = (updatedProject) => {
+    addEvent('project_update', `Projet modifié : ${updatedProject.label}`);
+    onProjectUpdate && onProjectUpdate(updatedProject);
+  };
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
