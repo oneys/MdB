@@ -309,9 +309,9 @@ frontend:
 
   - task: "Drag & drop functionality in Kanban pipeline"
     implemented: true
-    working: false
+    working: true
     file: "App.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -321,6 +321,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ DRAG & DROP PARTIALLY WORKING - Interface is present with draggable cards and drop zones, but drag & drop execution fails. Projects do not move between columns when dragged. Visual feedback works (cards become draggable, drop zones highlight) but the actual state change/persistence is not functioning. Requires backend integration or state management fix."
+      - working: true
+        agent: "testing"
+        comment: "✅ DRAG & DROP FUNCTIONALITY FIXED - Phase 2 testing confirms drag & drop is now working! Successfully moved 'Maison Familiale Banlieue' from 'Détecté' to 'Offre' column. Visual feedback works correctly, projects move between columns as expected. Backend integration with handleProjectStatusUpdate and handleProjectUpdate functions appears to be functioning. UI state changes are reflected immediately."
 
   - task: "Document upload/download functionality"
     implemented: true
