@@ -1333,6 +1333,7 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
               onClose={() => setShowCreateProject(false)}
               onSubmit={(newProject) => {
                 setLocalProjects(prev => [...prev, newProject]);
+                onProjectCreate(newProject);
                 setShowCreateProject(false);
               }}
             />
