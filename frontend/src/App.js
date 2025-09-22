@@ -1101,12 +1101,16 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
 
   const accessibleProjects = getAccessibleProjects();
 
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleDragStart = (e, projectId) => {
     // Only allow drag if user has write access
     if (user?.role === 'INVITE') {
       e.preventDefault();
       return;
     }
+    
+    setIsDragging(true);
     e.dataTransfer.setData('text/plain', projectId);
     e.dataTransfer.effectAllowed = 'move';
     
@@ -1118,6 +1122,10 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
 
   const handleDragEnd = (e) => {
     e.target.style.opacity = '1';
+    // Reset dragging state after a small delay to avoid immediate click
+    setTimeout(() => {
+      setIsDragging(false);
+    }, 100);
   };
 
   const handleDragOver = (e) => {
