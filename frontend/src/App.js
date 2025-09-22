@@ -1908,7 +1908,7 @@ const DataroomPanel = ({ project }) => {
       setFiles(prev => prev.filter(f => f.id !== document.id));
     } catch (error) {
       console.error('Delete error:', error);
-      alert(`Erreur lors de la suppression: ${error.response?.data?.detail || error.message}`);
+      console.error(`Erreur lors de la suppression: ${error.response?.data?.detail || error.message}`);
     }
   };
 
