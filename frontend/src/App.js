@@ -304,76 +304,73 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Mock data for demo (with ownership/access control simulation)
+// Function to calculate dynamic TRI
+const calculateTRI = (project) => {
+  const investissement = project.prix_achat_ttc + project.travaux_ttc + project.frais_agence_ttc;
+  const benefice = project.prix_vente_ttc - investissement;
+  
+  if (investissement === 0) return 0;
+  
+  // Simple TRI calculation (benefice / investissement)
+  const tri = benefice / investissement;
+  return Math.max(0, Math.min(1, tri)); // Between 0 and 100%
+};
+
+// Function to calculate dynamic margin
+const calculateMarge = (project) => {
+  return project.prix_vente_ttc - project.prix_achat_ttc - project.travaux_ttc - project.frais_agence_ttc;
+};
+
+// Mock projects data with dynamic calculations
+const createMockProject = (id, label, address, status, regime_tva, prix_achat_ttc, prix_vente_ttc, travaux_ttc, frais_agence_ttc, flags = {}) => {
+  const baseProject = {
+    id,
+    label,
+    address,
+    status,
+    regime_tva,
+    prix_achat_ttc,
+    prix_vente_ttc,
+    travaux_ttc,
+    frais_agence_ttc,
+    flags,
+    milestones: {},
+    financing: {},
+    owner_id: "test-user-12345",
+    team_members: [],
+    documents: [],
+    tasks: [],
+    events: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  // Calculate dynamic values
+  baseProject.marge_estimee = calculateMarge(baseProject);
+  baseProject.tri_estime = calculateTRI(baseProject);
+  
+  return baseProject;
+};
+
 const mockProjects = [
-  {
-    id: "proj_001",
-    label: "Rénovation Rue Mozart",
-    address: { line1: "12 Rue Mozart", city: "Paris", insee: "75116", dept: "75" },
-    status: "COMPROMIS",
-    regime_tva: "MARGE",
-    prix_achat_ttc: 320000,
-    prix_vente_ttc: 550000,
-    travaux_ttc: 85000,
-    frais_agence_ttc: 16000,
-    marge_estimee: 95000,
-    tri_estime: 0.22,
-    owner_id: "user_001",
-    team_members: ["user_001", "user_002"],
-    milestones: {
-      offre: "2025-08-15",
-      compromis: "2025-09-02",
-      acte_achat: "2025-10-15",
-      fin_travaux: null,
-      commercialisation: null,
-      revente: null
-    },
-    financing: {
-      pret_montant: 240000,
-      pret_taux: 0.045,
-      pret_duree: 180,
-      apport_personnel: 80000
-    },
-    flags: {
-      md_b_0715_ok: true,
-      travaux_structurants: true
-    },
-    created_at: "2025-08-01T10:00:00Z"
-  },
-  {
-    id: "proj_002", 
-    label: "Appartement Haussmannien",
-    address: { line1: "45 Avenue Victor Hugo", city: "Paris", insee: "75116", dept: "75" },
-    status: "TRAVAUX",
-    regime_tva: "MARGE", 
-    prix_achat_ttc: 480000,
-    prix_vente_ttc: 720000,
-    travaux_ttc: 120000,
-    frais_agence_ttc: 24000,
-    marge_estimee: 88000,
-    tri_estime: 0.18,
-    owner_id: "user_001",
-    team_members: ["user_001", "user_003"],
-    milestones: {
-      offre: "2025-07-10",
-      compromis: "2025-07-25", 
-      acte_achat: "2025-08-30",
-      fin_travaux: "2025-11-30",
-      commercialisation: null,
-      revente: null
-    },
-    financing: {
-      pret_montant: 360000,
-      pret_taux: 0.042,
-      pret_duree: 240,
-      apport_personnel: 120000
-    },
-    flags: {
-      md_b_0715_ok: true,
-      travaux_structurants: false
-    },
-    created_at: "2025-07-01T14:00:00Z"
-  }
+  createMockProject(
+    "project_1",
+    "Rénovation Appartement Montmartre", 
+    { line1: "15 rue des Abbesses", city: "Paris", dept: "75" },
+    "COMPROMIS",
+    "MARGE",
+    320000, 485000, 65000, 12000,
+    { md_b_0715_ok: true, travaux_structurants: false }
+  ),
+  createMockProject(
+    "project_2",
+    "Maison Familiale Banlieue",
+    { line1: "42 avenue du Général Leclerc", city: "Le Perreux-sur-Marne", dept: "94" },
+    "DETECTE", 
+    "NORMAL",
+    425000, 580000, 85000, 15000,
+    { md_b_0715_ok: false, travaux_structurants: true }
+  )
 ];
 
 const statusConfig = {
