@@ -2769,9 +2769,51 @@ const MainApp = () => {
     setActiveTab("project");
   };
 
-  const handleProjectUpdate = (updatedProject) => {
-    setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
-    setSelectedProject(updatedProject);
+  const handleProjectUpdate = async (updatedProject) => {
+    try {
+      // Update local state immediately for responsive UI
+      setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+      setSelectedProject(updatedProject);
+
+      // Make API call to persist changes
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/projects/${updatedProject.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          label: updatedProject.label,
+          address: updatedProject.address,
+          status: updatedProject.status,
+          regime_tva: updatedProject.regime_tva,
+          prix_achat_ttc: updatedProject.prix_achat_ttc,
+          prix_vente_ttc: updatedProject.prix_vente_ttc,
+          travaux_ttc: updatedProject.travaux_ttc,
+          frais_agence_ttc: updatedProject.frais_agence_ttc,
+          flags: updatedProject.flags,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update project: ${response.status}`);
+      }
+
+      const persistedProject = await response.json();
+      console.log(`✅ Projet "${updatedProject.label}" mis à jour en base de données`);
+      
+      // Update with server response to ensure consistency
+      setProjects(prev => prev.map(p => p.id === persistedProject.id ? persistedProject : p));
+      if (selectedProject?.id === persistedProject.id) {
+        setSelectedProject(persistedProject);
+      }
+      
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du projet:', error);
+      // Could add toast notification here for user feedback
+      alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
+    }
   };
 
   const handleProjectCreate = (newProject) => {
