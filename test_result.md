@@ -216,7 +216,7 @@ frontend:
 
   - task: "Liste projets Dashboard"
     implemented: true
-    working: "NA"
+    working: true
     file: "App.js"
     stuck_count: 0
     priority: "medium"
@@ -228,6 +228,9 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "Non testé - Authentification OAuth Google requise pour accéder au dashboard. Code implémenté avec mockProjects et gestion des rôles utilisateur (OWNER, PM, ANALYSTE, INVITE)."
+      - working: true
+        agent: "testing"
+        comment: "✅ FONCTIONNEL - Dashboard complet avec message de bienvenue, KPIs (2 projets accessibles, marge estimée 183,000€, TRI moyen 20%), répartition des projets par statut, liste des projets récents avec détails financiers. Navigation vers fiches projet opérationnelle."
 
 metadata:
   created_by: "main_agent"
