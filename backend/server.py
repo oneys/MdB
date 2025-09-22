@@ -1311,7 +1311,7 @@ async def create_project(
 async def update_project(
     project_id: str,
     project: ProjectUpdate,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_auth)
 ):
     """Update project details"""
     # Check if project exists and user has access
@@ -1322,7 +1322,7 @@ async def update_project(
     # Check permissions
     if (existing_project["owner_id"] != current_user.id and 
         current_user.id not in existing_project.get("team_members", []) and
-        current_user.role not in ["OWNER"]):
+        current_user.role not in [UserRole.OWNER]):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Update project
