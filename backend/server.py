@@ -1258,6 +1258,9 @@ async def require_auth(session_token: Optional[str] = Cookie(None, alias="sessio
         # Handle both datetime objects and ISO strings
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at)
+        # Ensure both datetimes are timezone-aware
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
         if expires_at < datetime.now(timezone.utc):
             raise HTTPException(status_code=401, detail="Session expired")
     
