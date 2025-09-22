@@ -180,6 +180,54 @@ backend:
         agent: "testing"
         comment: "✅ PARFAIT - API /estimate/run fonctionne parfaitement. Tous les champs requis présents: dmto, emoluments, csi, debours, tva_collectee, tva_marge, marge_brute, marge_nette, tri, explain. Explications détaillées (675-856 caractères). Warnings travaux structurants présents."
 
+  - task: "Upload documents"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PARFAIT - Upload de documents fonctionne parfaitement. API POST /projects/{id}/documents accepte fichiers PDF, images, documents Office. Documents apparaissent correctement dans la liste du projet via GET /projects/{id}. Authentification sécurisée requise."
+
+  - task: "Téléchargement documents"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PARFAIT - Téléchargement de documents fonctionne parfaitement. API GET /projects/{id}/documents/{doc_id}/download retourne le fichier PDF original (463 bytes). Validation du format PDF correcte. Headers Content-Disposition appropriés."
+
+  - task: "Export PDF dossiers"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PARFAIT - Export PDF fonctionne parfaitement. Dossier banque (2787 bytes) et dossier notaire (2624 bytes) générés avec succès. APIs GET /projects/{id}/export/bank et /export/notary fonctionnelles. PDFs valides avec contenu structuré."
+
+  - task: "Calculs dynamiques projets"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PARFAIT - Calculs dynamiques fonctionnent parfaitement. PATCH /projects/{id} recalcule automatiquement marge_estimee lors de modification des prix. Test: 500k€ - 350k€ - 70k€ - 15k€ = 65k€ calculé correctement. Mise à jour temps réel opérationnelle."
+
 frontend:
   - task: "Formulaire création projet"
     implemented: true
