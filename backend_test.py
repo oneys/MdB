@@ -338,6 +338,358 @@ class TaxCalculationAPITester:
         
         return {"valid": True, "message": f"All {len(required_fields)} required fields present and valid"}
 
+    def setup_authentication(self):
+        """Setup dev session for testing"""
+        print("\n🔐 Setting up authentication...")
+        try:
+            url = f"{self.api_url}/auth/dev-session"
+            response = requests.post(url, timeout=10)
+            
+            if response.status_code == 200:
+                # Extract session token from cookies
+                if 'Set-Cookie' in response.headers:
+                    cookie_header = response.headers['Set-Cookie']
+                    if 'session_token=' in cookie_header:
+                        # Extract session token value
+                        start = cookie_header.find('session_token=') + len('session_token=')
+                        end = cookie_header.find(';', start)
+                        if end == -1:
+                            end = len(cookie_header)
+                        self.session_token = cookie_header[start:end]
+                        print(f"✅ Authentication successful - Session token obtained")
+                        return True
+                
+                print(f"❌ No session token in response cookies")
+                return False
+            else:
+                print(f"❌ Authentication failed: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Authentication error: {str(e)}")
+            return False
+
+    def create_test_project(self):
+        """Create a test project for document testing"""
+        print("\n📁 Creating test project...")
+        
+        project_data = {
+            "label": f"Test Project Documents {datetime.now().strftime('%H%M%S')}",
+            "address": {
+                "line1": "123 Rue de Test",
+                "city": "Paris",
+                "dept": "75"
+            },
+            "regime_tva": "MARGE",
+            "prix_achat_ttc": 350000,
+            "prix_vente_ttc": 500000,
+            "travaux_ttc": 70000,
+            "frais_agence_ttc": 15000
+        }
+        
+        success, response = self.run_test(
+            "Create Test Project",
+            "POST",
+            "projects",
+            200,
+            data=project_data
+        )
+        
+        if success and 'id' in response:
+            self.test_project_id = response['id']
+            print(f"✅ Test project created with ID: {self.test_project_id}")
+            return True
+        else:
+            print(f"❌ Failed to create test project")
+            return False
+
+    def create_test_document(self):
+        """Create a test PDF document for upload testing"""
+        # Create a simple test PDF content
+        test_content = b"""%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+
+4 0 obj
+<<
+/Length 44
+>>
+stream
+BT
+/F1 12 Tf
+100 700 Td
+(Test Document) Tj
+ET
+endstream
+endobj
+
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000206 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+>>
+startxref
+300
+%%EOF"""
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        temp_file.write(test_content)
+        temp_file.close()
+        
+        return temp_file.name
+
+    def test_document_upload(self):
+        """Test document upload functionality"""
+        if not self.test_project_id:
+            print("❌ No test project available for document upload")
+            return False
+            
+        print(f"\n📤 Testing document upload to project {self.test_project_id}...")
+        
+        # Create test document
+        test_file_path = self.create_test_document()
+        
+        try:
+            with open(test_file_path, 'rb') as f:
+                files = {'file': ('test_document.pdf', f, 'application/pdf')}
+                form_data = {'category': 'JURIDIQUE'}
+                
+                success, response = self.run_test(
+                    "Upload Document",
+                    "POST",
+                    f"projects/{self.test_project_id}/documents",
+                    200,
+                    files=files,
+                    form_data=form_data
+                )
+                
+                if success and 'document' in response:
+                    self.test_document_id = response['document']['id']
+                    print(f"✅ Document uploaded with ID: {self.test_document_id}")
+                    return True
+                else:
+                    print(f"❌ Document upload failed")
+                    return False
+                    
+        except Exception as e:
+            print(f"❌ Document upload error: {str(e)}")
+            return False
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(test_file_path)
+            except:
+                pass
+
+    def test_document_in_project_list(self):
+        """Test that uploaded document appears in project details"""
+        if not self.test_project_id:
+            print("❌ No test project available")
+            return False
+            
+        print(f"\n📋 Testing document appears in project list...")
+        
+        success, response = self.run_test(
+            "Get Project with Documents",
+            "GET",
+            f"projects/{self.test_project_id}",
+            200
+        )
+        
+        if success:
+            documents = response.get('documents', [])
+            if documents:
+                print(f"✅ Found {len(documents)} document(s) in project")
+                for doc in documents:
+                    print(f"   • {doc.get('filename', 'Unknown')} ({doc.get('category', 'No category')})")
+                return True
+            else:
+                print(f"❌ No documents found in project")
+                return False
+        else:
+            print(f"❌ Failed to get project details")
+            return False
+
+    def test_document_download(self):
+        """Test document download functionality"""
+        if not self.test_project_id or not hasattr(self, 'test_document_id'):
+            print("❌ No test document available for download")
+            return False
+            
+        print(f"\n📥 Testing document download...")
+        
+        try:
+            url = f"{self.api_url}/projects/{self.test_project_id}/documents/{self.test_document_id}/download"
+            cookies = {}
+            if self.session_token:
+                cookies['session_token'] = self.session_token
+                
+            response = requests.get(url, cookies=cookies, timeout=10)
+            
+            if response.status_code == 200:
+                if len(response.content) > 0:
+                    print(f"✅ Document downloaded successfully ({len(response.content)} bytes)")
+                    # Verify it's a PDF
+                    if response.content.startswith(b'%PDF'):
+                        print(f"✅ Downloaded file is valid PDF")
+                        self.tests_passed += 1
+                        return True
+                    else:
+                        print(f"❌ Downloaded file is not a valid PDF")
+                        return False
+                else:
+                    print(f"❌ Downloaded file is empty")
+                    return False
+            else:
+                print(f"❌ Download failed: {response.status_code} - {response.text[:200]}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Download error: {str(e)}")
+            return False
+
+    def test_pdf_export_bank(self):
+        """Test bank dossier PDF export"""
+        if not self.test_project_id:
+            print("❌ No test project available for PDF export")
+            return False
+            
+        print(f"\n🏦 Testing bank dossier PDF export...")
+        
+        try:
+            url = f"{self.api_url}/projects/{self.test_project_id}/export/bank"
+            cookies = {}
+            if self.session_token:
+                cookies['session_token'] = self.session_token
+                
+            response = requests.get(url, cookies=cookies, timeout=15)
+            
+            if response.status_code == 200:
+                if len(response.content) > 0:
+                    # Verify it's a PDF
+                    if response.content.startswith(b'%PDF'):
+                        print(f"✅ Bank dossier PDF generated successfully ({len(response.content)} bytes)")
+                        self.tests_passed += 1
+                        return True
+                    else:
+                        print(f"❌ Bank export is not a valid PDF")
+                        return False
+                else:
+                    print(f"❌ Bank export is empty")
+                    return False
+            else:
+                print(f"❌ Bank export failed: {response.status_code} - {response.text[:200]}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Bank export error: {str(e)}")
+            return False
+
+    def test_pdf_export_notary(self):
+        """Test notary dossier PDF export"""
+        if not self.test_project_id:
+            print("❌ No test project available for PDF export")
+            return False
+            
+        print(f"\n⚖️ Testing notary dossier PDF export...")
+        
+        try:
+            url = f"{self.api_url}/projects/{self.test_project_id}/export/notary"
+            cookies = {}
+            if self.session_token:
+                cookies['session_token'] = self.session_token
+                
+            response = requests.get(url, cookies=cookies, timeout=15)
+            
+            if response.status_code == 200:
+                if len(response.content) > 0:
+                    # Verify it's a PDF
+                    if response.content.startswith(b'%PDF'):
+                        print(f"✅ Notary dossier PDF generated successfully ({len(response.content)} bytes)")
+                        self.tests_passed += 1
+                        return True
+                    else:
+                        print(f"❌ Notary export is not a valid PDF")
+                        return False
+                else:
+                    print(f"❌ Notary export is empty")
+                    return False
+            else:
+                print(f"❌ Notary export failed: {response.status_code} - {response.text[:200]}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Notary export error: {str(e)}")
+            return False
+
+    def test_dynamic_calculations(self):
+        """Test dynamic calculations when updating project"""
+        if not self.test_project_id:
+            print("❌ No test project available for dynamic calculations")
+            return False
+            
+        print(f"\n🧮 Testing dynamic calculations...")
+        
+        # Update project with new financial data
+        update_data = {
+            "prix_achat_ttc": 350000,
+            "prix_vente_ttc": 500000,
+            "travaux_ttc": 70000,
+            "frais_agence_ttc": 15000
+        }
+        
+        success, response = self.run_test(
+            "Update Project for Dynamic Calculations",
+            "PATCH",
+            f"projects/{self.test_project_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            # Check if marge_estimee was recalculated
+            marge_estimee = response.get('marge_estimee', 0)
+            expected_marge = 500000 - 350000 - 70000 - 15000  # 65000
+            
+            if abs(marge_estimee - expected_marge) < 1:
+                print(f"✅ Dynamic calculation correct: Marge estimée = {marge_estimee:,.2f} € (expected ~{expected_marge:,.2f} €)")
+                return True
+            else:
+                print(f"❌ Dynamic calculation incorrect: got {marge_estimee:,.2f} €, expected ~{expected_marge:,.2f} €")
+                return False
+        else:
+            print(f"❌ Failed to update project for dynamic calculations")
+            return False
+
     def test_comprehensive_field_validation(self):
         """Test that all required fields are present in response"""
         data = {
