@@ -309,7 +309,7 @@ class Project(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProjectCreate(BaseModel):
-    label: str = Field(..., min_length=3, max_length=200, regex=r'^[a-zA-Z0-9\s\-_\.\,\(\)]+$')
+    label: str = Field(..., min_length=3, max_length=200, pattern=r'^[a-zA-Z0-9\s\-_\.\,\(\)]+$')
     address: Dict[str, str] = Field(default_factory=dict)
     regime_tva: RegimeTVA = RegimeTVA.MARGE
     prix_achat_ttc: float = Field(..., ge=1000, le=50000000, description="Prix d'achat entre 1K€ et 50M€")
