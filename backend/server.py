@@ -99,6 +99,9 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
                 }
             )
 
+# Rate limiter setup
+limiter = Limiter(key_func=get_remote_address)
+
 # FastAPI setup
 app = FastAPI(
     title="MarchndsBiens API", 
@@ -106,6 +109,10 @@ app = FastAPI(
     description="API complète pour marchands de biens immobiliers"
 )
 api_router = APIRouter(prefix="/api")
+
+# Add rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add error handling middleware
 app.add_middleware(ErrorHandlingMiddleware)
