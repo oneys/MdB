@@ -229,13 +229,28 @@ backend:
         comment: "✅ PARFAIT - Calculs dynamiques fonctionnent parfaitement. PATCH /projects/{id} recalcule automatiquement marge_estimee lors de modification des prix. Test: 500k€ - 350k€ - 70k€ - 15k€ = 65k€ calculé correctement. Mise à jour temps réel opérationnelle."
 
 frontend:
+  - task: "White screen error fix"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported white screen error preventing application from loading"
+      - working: true
+        agent: "main"
+        comment: "✅ FIXED - JavaScript error 'Cannot read properties of undefined (reading 'calculateLiquidityScore')' resolved by changing this.calculateLiquidityScore to FinancialCalculator.calculateLiquidityScore in App.js line 363. Application now loads correctly showing landing page."
+
   - task: "Formulaire création projet"
     implemented: true
     working: true
     file: "App.js"
     stuck_count: 0  
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "unknown"
         agent: "main"
