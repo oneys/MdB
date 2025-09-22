@@ -1264,46 +1264,7 @@ async def get_projects(current_user: User = Depends(get_current_user)):
     
     return [ProjectResponse(**project) for project in projects]
 
-@api_router.post("/projects", response_model=Project)
-async def create_project(
-    project_data: ProjectCreate,
-    current_user: User = Depends(require_auth)
-):
-    """Create new project (Owner and PM only)"""
-    if current_user.role not in [UserRole.OWNER, UserRole.PM]:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
-    
-    project_dict = project_data.dict()
-    project_dict["owner_id"] = current_user.id
-    project_dict["team_members"] = [current_user.id]
-    
-    project = Project(**project_dict)
-    await db.projects.insert_one(project.dict())
-    
-    # Create TRACFIN event for high-value projects
-    if project.prix_achat_ttc > 150000:
-        await tracfin_service.create_event(TracfinEventCreate(
-            user_id=current_user.id,
-            project_id=project.id,
-            event_type=TracfinEventType.OPERATION_IMPORTANTE,
-            description=f"Nouveau projet immobilier - {project.label}",
-            amount=project.prix_achat_ttc,
-            metadata={"project_status": project.status.value, "regime_tva": project.regime_tva.value}
-        ))
-    
-    # Create risk assessment
-    await risk_service.create_risk_assessment(current_user, project, project.prix_achat_ttc)
-    
-    # Log project creation event  
-    event = ProjectEvent(
-        project_id=project.id,
-        event_type="project_created",
-        description=f"Projet '{project.label}' créé",
-        user=current_user.name
-    )
-    await db.project_events.insert_one(event.dict())
-    
-    return project
+# Original create_project endpoint removed - replaced with new implementation below
 
 @api_router.post("/projects", response_model=ProjectResponse)
 async def create_project(
