@@ -1253,8 +1253,13 @@ async def require_auth(session_token: Optional[str] = Cookie(None, alias="sessio
         raise HTTPException(status_code=401, detail="Invalid session")
     
     # Check session expiry
-    if user_session.get("expires_at") and datetime.fromisoformat(user_session["expires_at"]) < datetime.now(timezone.utc):
-        raise HTTPException(status_code=401, detail="Session expired")
+    expires_at = user_session.get("expires_at")
+    if expires_at:
+        # Handle both datetime objects and ISO strings
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at)
+        if expires_at < datetime.now(timezone.utc):
+            raise HTTPException(status_code=401, detail="Session expired")
     
     # Get user
     user_data = await db.users.find_one({"id": user_session["user_id"]})
