@@ -1862,7 +1862,7 @@ const DataroomPanel = ({ project }) => {
         }
       } catch (error) {
         console.error('Upload error:', error);
-        alert(`Erreur lors de l'upload de ${file.name}: ${error.response?.data?.detail || error.message}`);
+        console.error(`Erreur lors de l'upload de ${file.name}: ${error.response?.data?.detail || error.message}`);
       }
     }
     
