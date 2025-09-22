@@ -1839,7 +1839,7 @@ async def export_notary_dossier(
         ['Prix d\'acquisition TTC', f"{project.get('prix_achat_ttc', 0):,.2f} €"],
         ['Régime fiscal', project.get('regime_tva', 'Non spécifié')],
         ['Marchand de biens', 'Oui' if project.get('flags', {}).get('md_b_0715_ok') else 'Non'],
-        ['Date création', project.get('created_at', 'N/A')[:10] if project.get('created_at') else 'N/A']
+        ['Date création', project.get('created_at').strftime('%Y-%m-%d') if project.get('created_at') else 'N/A']
     ]
     
     t = Table(legal_data, colWidths=[3*inch, 2*inch])
