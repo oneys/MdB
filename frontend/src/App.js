@@ -2432,6 +2432,14 @@ const FicheProjet = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate }
     addEvent('project_update', `Projet modifié : ${updatedProject.label}`);
     onProjectUpdate && onProjectUpdate(updatedProject);
   };
+
+  const handleStatusUpdate = async (projectId, newStatus) => {
+    const oldStatus = project.status;
+    addEvent('status_change', `Statut changé de ${oldStatus} vers ${newStatus}`);
+    if (onProjectStatusUpdate) {
+      await onProjectStatusUpdate(projectId, newStatus);
+    }
+  };
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
