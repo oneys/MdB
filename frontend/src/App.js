@@ -2328,8 +2328,78 @@ const DataroomPanel = ({ project }) => {
   );
 };
 
+// Status Editor Component
+const ProjectStatusEditor = ({ project, onStatusUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(project.status);
+
+  const statusConfig = {
+    'DETECTE': { label: 'Détecté', color: 'bg-slate-500', bgColor: 'bg-slate-100' },
+    'OFFRE': { label: 'Offre', color: 'bg-blue-500', bgColor: 'bg-blue-100' },
+    'SOUS_COMPROMIS': { label: 'Sous compromis', color: 'bg-amber-500', bgColor: 'bg-amber-100' },
+    'ACTE_SIGNE': { label: 'Acte signé', color: 'bg-green-500', bgColor: 'bg-green-100' },
+    'TRAVAUX': { label: 'Travaux', color: 'bg-purple-500', bgColor: 'bg-purple-100' },
+    'COMMERCIALISATION': { label: 'Commercialisation', color: 'bg-indigo-500', bgColor: 'bg-indigo-100' },
+    'VENDU': { label: 'Vendu', color: 'bg-emerald-500', bgColor: 'bg-emerald-100' },
+    'ABANDONNE': { label: 'Abandonné', color: 'bg-red-500', bgColor: 'bg-red-100' }
+  };
+
+  const handleStatusChange = async () => {
+    if (selectedStatus !== project.status) {
+      await onStatusUpdate(project.id, selectedStatus);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <select 
+          value={selectedStatus} 
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="border border-slate-300 rounded-md px-3 py-1 text-sm"
+        >
+          {Object.entries(statusConfig).map(([status, config]) => (
+            <option key={status} value={status}>{config.label}</option>
+          ))}
+        </select>
+        <button 
+          onClick={handleStatusChange}
+          className="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600"
+        >
+          ✓
+        </button>
+        <button 
+          onClick={() => setIsEditing(false)}
+          className="px-3 py-1 bg-slate-500 text-white rounded-md text-sm hover:bg-slate-600"
+        >
+          ✕
+        </button>
+      </div>
+    );
+  }
+
+  const currentConfig = statusConfig[project.status] || statusConfig['DETECTE'];
+  
+  return (
+    <div className="flex items-center gap-2">
+      <Badge className={`${currentConfig.bgColor} text-slate-800 border-0`}>
+        <div className={`w-2 h-2 rounded-full ${currentConfig.color} mr-2`}></div>
+        {currentConfig.label}
+      </Badge>
+      <button 
+        onClick={() => setIsEditing(true)}
+        className="p-1 hover:bg-slate-100 rounded"
+        title="Modifier le statut"
+      >
+        <Edit className="h-4 w-4 text-slate-500" />
+      </button>
+    </div>
+  );
+};
+
 // Fiche Projet Simplifiée (pour l'instant)
-const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
+const FicheProjet = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate }) => {
   const [showEditProject, setShowEditProject] = useState(false);
   const [activeProjectTab, setActiveProjectTab] = useState('overview');
   const [projectEvents, setProjectEvents] = useState([
