@@ -1858,7 +1858,20 @@ const DataroomPanel = ({ project }) => {
         );
 
         if (response.data.document) {
-          setFiles(prev => [...prev, response.data.document]);
+          // Format document for display
+          const formattedDoc = {
+            ...response.data.document,
+            type: response.data.document.category,
+            size: `${(response.data.document.size / 1024 / 1024).toFixed(1)} MB`,
+            date: new Date(response.data.document.uploaded_at).toISOString().split('T')[0]
+          };
+          setFiles(prev => [...prev, formattedDoc]);
+          
+          // Also update parent component if callback exists
+          if (onProjectUpdate) {
+            // Trigger project refresh to sync documents
+            window.location.reload(); // Force refresh for now to ensure sync
+          }
         }
       } catch (error) {
         console.error('Upload error:', error);
