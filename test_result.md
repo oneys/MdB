@@ -282,6 +282,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ ESTIMATEUR FRONTEND FONCTIONNEL - Interface complète implémentée avec tous les champs requis (dept, regime_tva, prix_achat_ttc, prix_vente_ttc, travaux_ttc, frais_agence_ttc, checkboxes MdB 0,715% et travaux structurants). API /estimate/run testée avec succès pour les 3 cas: CAS A (TVA marge, DMTO 2,145€, TRI 24%), CAS B (TVA normale, TVA collectée 60,000€, TRI 2%), CAS C (Exonération, TVA=0, TRI 7%). Seule limitation: authentification OAuth Google requise pour accès interface."
+      - working: true
+        agent: "testing"
+        comment: "✅ DYNAMIC CALCULATIONS FULLY VERIFIED - Estimateur produces detailed results including Marge nette (97,399.57€), TRI estimé (24.0%), complete cost breakdown (DMTO 2,145€, Émoluments notaire 3,522.10€, CSI 300€, Débours 800€, TVA sur marge 20,833.33€), and detailed explanations. All 3 tax regimes working perfectly with real-time calculations."
 
   - task: "Liste projets Dashboard"
     implemented: true
