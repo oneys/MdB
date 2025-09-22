@@ -2395,6 +2395,15 @@ const MainApp = () => {
         setActiveTab={setActiveTab}
         selectedProject={selectedProject}
         setSelectedProject={setSelectedProject}
+        onNavigateFromProject={() => {
+          // Auto-save when navigating away from project
+          if (selectedProject) {
+            console.log(`🔄 Auto-sauvegarde du projet: ${selectedProject.label}`);
+            // Here you would typically save to backend
+            // await saveProjectToBackend(selectedProject);
+          }
+          setSelectedProject(null);
+        }}
       />
       
       <div className="max-w-7xl mx-auto p-6">
