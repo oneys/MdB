@@ -1890,7 +1890,7 @@ const DataroomPanel = ({ project }) => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Download error:', error);
-      alert(`Erreur lors du téléchargement: ${error.response?.data?.detail || error.message}`);
+      console.error(`Erreur lors du téléchargement: ${error.response?.data?.detail || error.message}`);
     }
   };
 
