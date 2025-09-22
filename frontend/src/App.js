@@ -576,13 +576,26 @@ const Dashboard = ({ projects, onProjectSelect, onProjectCreate }) => {
     <div className="space-y-6">
       {/* Welcome Message */}
       <div className="bg-gradient-to-r from-amber-50 to-emerald-50 rounded-lg p-6 border border-amber-200">
-        <h2 className="text-xl font-bold text-slate-900 mb-2">
-          Bienvenue, {user?.name} !
-        </h2>
-        <p className="text-slate-600">
-          Vous avez accès à {totalProjects} projet{totalProjects > 1 ? 's' : ''} en tant que{' '}
-          <Badge className={getRoleColor(user?.role)}>{user?.role}</Badge>
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">
+              Bienvenue, {user?.name} !
+            </h2>
+            <p className="text-slate-600">
+              Vous avez accès à {totalProjects} projet{totalProjects > 1 ? 's' : ''} en tant que{' '}
+              <Badge className={getRoleColor(user?.role)}>{user?.role}</Badge>
+            </p>
+          </div>
+          {(['OWNER', 'PM'].includes(user?.role)) && (
+            <Button 
+              onClick={() => setShowCreateProject(true)}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau Projet
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* KPIs Cards */}
