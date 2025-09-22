@@ -1250,7 +1250,12 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
                     draggable={user?.role !== 'INVITE'}
                     onDragStart={(e) => handleDragStart(e, project.id)}
                     onDragEnd={handleDragEnd}
-                    onClick={() => onProjectSelect(project)}
+                    onClick={() => {
+                      // Only open project if not dragging
+                      if (!isDragging) {
+                        onProjectSelect(project);
+                      }
+                    }}
                     className={`kanban-card bg-white rounded-lg p-4 shadow-sm border border-slate-200 cursor-pointer transition-all duration-200 hover:shadow-md ${
                       user?.role === 'INVITE' ? 'cursor-default' : 'hover:scale-105'
                     }`}
