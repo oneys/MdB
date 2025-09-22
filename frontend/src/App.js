@@ -184,7 +184,7 @@ const SessionHandler = ({ children }) => {
 
 // Login Component
 const LoginPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, checkAuth } = useAuth();
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
@@ -203,15 +203,9 @@ const LoginPage = () => {
     try {
       const response = await axios.post(`${API}/auth/dev-session`, {}, { withCredentials: true });
       if (response.data.user) {
-        const userData = {
-          id: "test-user-12345",
-          email: response.data.user.email,
-          name: response.data.user.name,
-          role: response.data.user.role,
-          session_token: "dev_session"
-        };
-        login(userData);
-        navigate('/dashboard');
+        // The backend sets the session cookie, so we just need to check auth
+        await checkAuth();
+        // The auth context will handle the redirect via the Navigate component above
       }
     } catch (error) {
       console.error('Dev session error:', error);
