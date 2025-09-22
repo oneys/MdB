@@ -1966,7 +1966,7 @@ const DataroomPanel = ({ project }) => {
             <div className="flex items-center justify-center gap-4 mb-4">
               <Label htmlFor="category-select" className="text-sm font-medium">Catégorie :</Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-48 mx-auto">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
