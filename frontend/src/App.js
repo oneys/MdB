@@ -360,7 +360,7 @@ const FinancialCalculator = {
       prixM2Achat: estimatedSurface > 0 ? Math.round(prixAchat / estimatedSurface) : 0,
       prixM2Vente: estimatedSurface > 0 ? Math.round(prixVente / estimatedSurface) : 0,
       plusValueM2: estimatedSurface > 0 ? Math.round((prixVente - prixAchat) / estimatedSurface) : 0,
-      liquidityScore: this.calculateLiquidityScore(dept, prixAchat)
+      liquidityScore: FinancialCalculator.calculateLiquidityScore(dept, prixAchat)
     };
   },
 
