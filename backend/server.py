@@ -331,7 +331,7 @@ class ProjectCreate(BaseModel):
         
     @validator('frais_agence_ttc')
     def validate_agency_fees(cls, v, values):
-        if 'prix_achat_ttc' in values and v > values['prix_agence_ttc'] * 0.15:
+        if 'prix_achat_ttc' in values and v > values['prix_achat_ttc'] * 0.15:
             raise ValueError('Frais agence ne peuvent pas dépasser 15% du prix d\'achat')
         return v
 
