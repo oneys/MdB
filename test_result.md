@@ -303,14 +303,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Upload documents - COMPLÉTÉ ✅"
-    - "Téléchargement documents - COMPLÉTÉ ✅"
-    - "Export PDF dossiers - COMPLÉTÉ ✅"
-    - "Calculs dynamiques - COMPLÉTÉ ✅"
-    - "APIs projets CRUD - COMPLÉTÉ ✅"
+    - "White screen error fix - FIXED ✅"
+    - "Frontend comprehensive testing after white screen fix"
+    - "Drag & drop functionality in Kanban pipeline"
+    - "Document upload/download functionality verification"
+    - "Dynamic calculations verification"
   stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  test_all: true
+  test_priority: "critical_first"
 
 agent_communication:
   - agent: "main"
