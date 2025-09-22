@@ -560,11 +560,16 @@ const mockProjects = [
 const statusConfig = {
   DETECTE: { label: "Détecté", color: "bg-slate-500", order: 1 },
   OFFRE: { label: "Offre", color: "bg-blue-500", order: 2 },
-  COMPROMIS: { label: "Compromis", color: "bg-yellow-500", order: 3 },
-  ACTE: { label: "Acte", color: "bg-orange-500", order: 4 },
+  SOUS_COMPROMIS: { label: "Sous compromis", color: "bg-amber-500", order: 3 },
+  ACTE_SIGNE: { label: "Acte signé", color: "bg-green-500", order: 4 },
   TRAVAUX: { label: "Travaux", color: "bg-purple-500", order: 5 },
   COMMERCIALISATION: { label: "Commercialisation", color: "bg-indigo-500", order: 6 },
-  REVENTE: { label: "Revente", color: "bg-green-500", order: 7 },
+  VENDU: { label: "Vendu", color: "bg-emerald-500", order: 7 },
+  ABANDONNE: { label: "Abandonné", color: "bg-red-500", order: 8 },
+  // Legacy statuses for backward compatibility
+  COMPROMIS: { label: "Compromis", color: "bg-amber-500", order: 3 },
+  ACTE: { label: "Acte", color: "bg-green-500", order: 4 },
+  REVENTE: { label: "Revente", color: "bg-emerald-500", order: 7 },
   CLOS: { label: "Clos", color: "bg-emerald-600", order: 8 }
 };
 
