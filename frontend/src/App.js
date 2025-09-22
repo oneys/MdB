@@ -434,7 +434,7 @@ const Navigation = ({ activeTab, setActiveTab, selectedProject, setSelectedProje
               </Button>
             )}
             
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+            <Tabs value={activeTab} onValueChange={handleTabClick} className="w-auto">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="dashboard" className="flex items-center gap-2">
                   <Home className="h-4 w-4" />
