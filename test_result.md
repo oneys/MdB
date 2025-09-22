@@ -307,6 +307,63 @@ frontend:
         agent: "testing"
         comment: "✅ FULLY VERIFIED - Dashboard displays comprehensive KPIs (Projets Accessibles: 2, Marge Estimée: 143,000€, TRI Moyen: 15.9%, En Retard: 1), complete project status distribution across all pipeline stages, and detailed project list with financial data. User role-based access working correctly with OWNER permissions."
 
+  - task: "Drag & drop functionality in Kanban pipeline"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported drag & drop in pipeline is buggy and doesn't persist"
+      - working: false
+        agent: "testing"
+        comment: "❌ DRAG & DROP PARTIALLY WORKING - Interface is present with draggable cards and drop zones, but drag & drop execution fails. Projects do not move between columns when dragged. Visual feedback works (cards become draggable, drop zones highlight) but the actual state change/persistence is not functioning. Requires backend integration or state management fix."
+
+  - task: "Document upload/download functionality"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported documents uploaded don't appear in project view and downloads fail"
+      - working: "NA"
+        agent: "testing"
+        comment: "❌ DOCUMENT MANAGEMENT NOT ACCESSIBLE - Could not access project detail views with document management features during testing. Navigation to individual project pages with Dataroom/Document sections was not successful. Interface may require specific project states or additional authentication. Backend document APIs are confirmed working from previous tests."
+
+  - task: "Dynamic TRI calculations and financial data"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported TRI calculations are not dynamic"
+      - working: true
+        agent: "testing"
+        comment: "✅ DYNAMIC CALCULATIONS FULLY FUNCTIONAL - TRI calculations are completely dynamic and working perfectly. Estimateur shows real-time calculations with detailed breakdown: Marge nette (97,399.57€), TRI estimé (24.0%), complete cost analysis including DMTO, notary fees, CSI, and TVA calculations. All financial data updates dynamically based on input parameters. Project cards in pipeline also show calculated margins and TRI values."
+
+  - task: "Event journal functionality"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "❌ EVENT JOURNAL NOT ACCESSIBLE - Could not access project detail views with Journal/Events sections during testing. Navigation to individual project pages was not successful in current test session. Backend event/journal APIs are confirmed working from previous tests."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
