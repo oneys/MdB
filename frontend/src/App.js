@@ -2473,9 +2473,15 @@ function App() {
       <AuthProvider>
         <SessionHandler>
           <Routes>
+            {/* Marketing Pages */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            
+            {/* App Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route 
-              path="/dashboard" 
+              path="/app" 
               element={
                 <ProtectedRoute>
                   <MainApp />
@@ -2483,8 +2489,8 @@ function App() {
               } 
             />
             <Route 
-              path="/" 
-              element={<Navigate to="/dashboard" replace />} 
+              path="/dashboard" 
+              element={<Navigate to="/app" replace />} 
             />
           </Routes>
         </SessionHandler>
