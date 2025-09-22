@@ -1162,32 +1162,19 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
       return;
     }
     
-    // Optimistic update
+    // Update local state and notify parent
+    const updatedProject = { ...draggedProject, status: newStatus, updated_at: new Date().toISOString() };
+    
     setLocalProjects(prev => 
       prev.map(project => 
-        project.id === projectId 
-          ? { ...project, status: newStatus, updated_at: new Date().toISOString() }
-          : project
+        project.id === projectId ? updatedProject : project
       )
     );
     
-    // Log the status change (simulate API call)
-    console.log(`📝 Projet "${draggedProject.label}" déplacé de ${draggedProject.status} vers ${newStatus}`);
+    // Notify parent component to update global state
+    onProjectUpdate(updatedProject);
     
-    // Here you would typically make an API call to update the backend
-    // try {
-    //   await axios.patch(`${API}/projects/${projectId}`, { status: newStatus }, { withCredentials: true });
-    // } catch (error) {
-    //   console.error('Error updating project status:', error);
-    //   // Revert on error
-    //   setLocalProjects(prev => 
-    //     prev.map(project => 
-    //       project.id === projectId 
-    //         ? { ...project, status: draggedProject.status }
-    //         : project
-    //     )
-    //   );
-    // }
+    console.log(`📝 Projet "${draggedProject.label}" déplacé de ${draggedProject.status} vers ${newStatus}`);
   };
 
   const getProjectsByStatus = (status) => {
