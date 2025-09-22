@@ -1236,6 +1236,27 @@ async def get_accessible_projects(user: User) -> List[str]:
         ).to_list(1000)
         return [p["id"] for p in projects]
 
+async def require_auth(session_token: Optional[str] = Cookie(None, alias="session_token")):
+    """Require authentication - simplified version"""
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Get user from session
+    user_session = await db.user_sessions.find_one({"session_token": session_token})
+    if not user_session:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    
+    # Check session expiry
+    if user_session.get("expires_at") and datetime.fromisoformat(user_session["expires_at"]) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=401, detail="Session expired")
+    
+    # Get user
+    user_data = await db.users.find_one({"id": user_session["user_id"]})
+    if not user_data:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return User(**user_data)
+
 async def check_project_access(project_id: str, user: User, required_permission: str = "read"):
     accessible_projects = await get_accessible_projects(user)
     if project_id not in accessible_projects:
