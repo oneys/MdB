@@ -1982,9 +1982,9 @@ const DataroomPanel = ({ project }) => {
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
               onChange={handleFileSelect}
-              className="hidden"
+              style={{ display: 'none' }}
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
             />
             
             <Button 
