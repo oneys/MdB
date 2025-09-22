@@ -2002,13 +2002,37 @@ async def get_project_estimate(project):
 # Include the router in the main app
 app.include_router(api_router)
 
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["http://localhost:3000", "https://*.preview.emergentagent.com", "https://realestate-mvp-2.preview.emergentagent.com"],
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=["*"],
 )
+
+# Custom exception handlers
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for error in exc.errors():
+        errors.append({
+            "field": " -> ".join([str(loc) for loc in error["loc"]]),
+            "message": error["msg"],
+            "type": error["type"]
+        })
+    
+    logging.warning(f"Validation error on {request.url.path}: {errors}")
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "validation_error",
+            "message": "Données de validation invalides",
+            "details": errors,
+            "timestamp": datetime.now().isoformat(),
+            "path": str(request.url.path)
+        }
+    )
 
 # Configure logging
 logging.basicConfig(
