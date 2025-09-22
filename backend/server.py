@@ -1710,7 +1710,9 @@ async def update_project_status(
 
 # Documents API endpoints
 @api_router.post("/projects/{project_id}/documents")
+@limiter.limit("10/minute")  # Limit uploads to prevent abuse
 async def upload_document(
+    request: Request,
     project_id: str,
     file: UploadFile = File(...),
     category: str = Form(...),
