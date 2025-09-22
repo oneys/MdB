@@ -1080,11 +1080,16 @@ const ProjectEditForm = ({ project, onClose, onUpdate }) => {
 };
 
 // Pipeline Component (with role-based access)
-const Pipeline = ({ projects, onProjectSelect }) => {
+const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate }) => {
   const { user } = useAuth();
   const [localProjects, setLocalProjects] = useState(projects);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+
+  // Sync with parent projects when they change
+  React.useEffect(() => {
+    setLocalProjects(projects);
+  }, [projects]);
 
   // Filter projects based on user access
   const getAccessibleProjects = () => {
