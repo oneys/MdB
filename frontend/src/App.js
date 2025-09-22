@@ -537,7 +537,7 @@ const ProjectUtils = {
 };
 
 const mockProjects = [
-  createMockProject(
+  ProjectUtils.createProject(
     "project_1",
     "Rénovation Appartement Montmartre", 
     { line1: "15 rue des Abbesses", city: "Paris", dept: "75" },
@@ -546,7 +546,7 @@ const mockProjects = [
     320000, 485000, 65000, 12000,
     { md_b_0715_ok: true, travaux_structurants: false }
   ),
-  createMockProject(
+  ProjectUtils.createProject(
     "project_2",
     "Maison Familiale Banlieue",
     { line1: "42 avenue du Général Leclerc", city: "Le Perreux-sur-Marne", dept: "94" },
