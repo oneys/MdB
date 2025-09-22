@@ -1667,6 +1667,112 @@ const Estimateur = () => {
   );
 };
 
+// Composant Tâches interactif
+const TasksPanel = ({ project, onProjectUpdate }) => {
+  const [tasks, setTasks] = useState([
+    { id: 1, title: "Compromis de vente", status: "completed", due: "2025-01-15" },
+    { id: 2, title: "Demande permis travaux", status: "in_progress", due: "2025-02-01" },
+    { id: 3, title: "Devis entreprises", status: "pending", due: "2025-02-15" },
+    { id: 4, title: "Début travaux", status: "pending", due: "2025-03-01" },
+    { id: 5, title: "Fin travaux", status: "pending", due: "2025-06-01" }
+  ]);
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+
+  const toggleTaskStatus = (taskId) => {
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId) {
+        const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+        return { ...task, status: newStatus };
+      }
+      return task;
+    }));
+  };
+
+  const addTask = () => {
+    if (newTaskTitle.trim()) {
+      const newTask = {
+        id: Date.now(),
+        title: newTaskTitle,
+        status: 'pending',
+        due: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0] // +7 days
+      };
+      setTasks(prev => [...prev, newTask]);
+      setNewTaskTitle('');
+      setShowAddTask(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CheckCircle className="h-5 w-5" />
+          Tâches
+        </CardTitle>
+        <CardDescription>To-do et jalons du projet</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {tasks.map((task) => (
+          <div key={task.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => toggleTaskStatus(task.id)}
+                className="cursor-pointer hover:scale-110 transition-transform"
+              >
+                {task.status === 'completed' ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : task.status === 'in_progress' ? (
+                  <Clock className="h-4 w-4 text-amber-500" />
+                ) : (
+                  <Circle className="h-4 w-4 text-slate-300" />
+                )}
+              </button>
+              <span className={`text-sm ${task.status === 'completed' ? 'line-through text-slate-500' : ''}`}>
+                {task.title}
+              </span>
+            </div>
+            <span className="text-xs text-slate-500">{new Date(task.due).toLocaleDateString('fr-FR')}</span>
+          </div>
+        ))}
+        
+        {showAddTask ? (
+          <div className="p-3 bg-white border-2 border-amber-200 rounded-lg">
+            <Input
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Nouvelle tâche..."
+              className="mb-2"
+              onKeyPress={(e) => e.key === 'Enter' && addTask()}
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={addTask} className="bg-amber-600 hover:bg-amber-700">
+                Ajouter
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => {
+                setShowAddTask(false);
+                setNewTaskTitle('');
+              }}>
+                Annuler
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full mt-3"
+            onClick={() => setShowAddTask(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter une tâche
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 // Composant Dataroom pour gestion des documents
 const DataroomPanel = ({ project }) => {
   const [files, setFiles] = useState([
