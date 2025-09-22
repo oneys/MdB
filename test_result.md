@@ -182,8 +182,8 @@ backend:
 
 frontend:
   - task: "Formulaire création projet"
-    implemented: "unknown"
-    working: "NA"
+    implemented: true
+    working: true
     file: "App.js"
     stuck_count: 0  
     priority: "high"
@@ -195,6 +195,9 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "Non testé - Authentification OAuth Google requise pour accéder à l'interface. Composant ProjectForm non visible dans le code actuel mais bouton 'Nouveau Projet' présent dans Pipeline."
+      - working: true
+        agent: "testing"
+        comment: "✅ FONCTIONNEL - Bouton 'Nouveau Projet' présent dans dashboard, modal de création s'ouvre correctement, formulaire complet avec tous les champs requis (nom, adresse, ville, département, régime TVA, prix achat/vente). Authentification dev session opérationnelle."
 
   - task: "Estimateur UI fonctionnel"
     implemented: true
