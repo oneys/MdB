@@ -1246,15 +1246,23 @@ async def check_project_access(project_id: str, user: User, required_permission:
     if required_permission == "write" and user.role == UserRole.INVITE:
         raise HTTPException(status_code=403, detail="Read-only access")
 
-@api_router.get("/projects", response_model=List[Project])
-async def get_projects(current_user: User = Depends(require_auth)):
-    accessible_project_ids = await get_accessible_projects(current_user)
+# Projects API endpoints
+@api_router.get("/projects", response_model=List[ProjectResponse])
+async def get_projects(current_user: User = Depends(get_current_user)):
+    """Get projects based on user role"""
+    if current_user.role == "OWNER":
+        projects = await db.projects.find().to_list(length=None)
+    elif current_user.role in ["PM", "ANALYSTE"]:
+        projects = await db.projects.find({
+            "$or": [
+                {"owner_id": current_user.id},
+                {"team_members": current_user.id}
+            ]
+        }).to_list(length=None)
+    else:  # INVITE
+        projects = await db.projects.find({"team_members": current_user.id}).to_list(length=None)
     
-    if not accessible_project_ids:
-        return []
-    
-    projects = await db.projects.find({"id": {"$in": accessible_project_ids}}).to_list(1000)
-    return [Project(**project) for project in projects]
+    return [ProjectResponse(**project) for project in projects]
 
 @api_router.post("/projects", response_model=Project)
 async def create_project(
