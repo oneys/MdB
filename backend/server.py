@@ -166,12 +166,17 @@ class RegimeTVA(str, Enum):
 class ProjectStatus(str, Enum):
     DETECTE = "DETECTE"
     OFFRE = "OFFRE"
-    COMPROMIS = "COMPROMIS"
-    ACTE = "ACTE"
+    SOUS_COMPROMIS = "SOUS_COMPROMIS"
+    ACTE_SIGNE = "ACTE_SIGNE"
     TRAVAUX = "TRAVAUX"
     COMMERCIALISATION = "COMMERCIALISATION"
-    REVENTE = "REVENTE"
-    CLOS = "CLOS"
+    VENDU = "VENDU"
+    ABANDONNE = "ABANDONNE"
+    # Legacy statuses for backward compatibility
+    COMPROMIS = "COMPROMIS"  # Maps to SOUS_COMPROMIS
+    ACTE = "ACTE"           # Maps to ACTE_SIGNE
+    REVENTE = "REVENTE"     # Maps to VENDU
+    CLOS = "CLOS"           # Maps to VENDU
 
 class TaskStatus(str, Enum):
     A_FAIRE = "A_FAIRE"
