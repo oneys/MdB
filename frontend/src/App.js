@@ -389,6 +389,14 @@ const Navigation = ({ activeTab, setActiveTab, selectedProject, setSelectedProje
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
+  const handleTabClick = (tab) => {
+    // If coming from a project page, trigger auto-save
+    if (selectedProject && onNavigateFromProject) {
+      onNavigateFromProject();
+    }
+    setActiveTab(tab);
+  };
+
   const getRoleColor = (role) => {
     switch (role) {
       case 'OWNER': return 'bg-red-100 text-red-700';
