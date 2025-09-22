@@ -1264,7 +1264,7 @@ async def check_project_access(project_id: str, user: User, access_type: str = "
         raise HTTPException(status_code=404, detail="Project not found")
     
     # Check access based on user role and project ownership
-    if user.role == "OWNER":
+    if user.role == UserRole.OWNER:
         return True  # Owner has access to all projects
     elif project["owner_id"] == user.id:
         return True  # Project owner has full access
