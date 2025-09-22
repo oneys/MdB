@@ -1,7 +1,10 @@
 import requests
 import sys
 import json
+import os
+import tempfile
 from datetime import datetime
+from pathlib import Path
 
 class TaxCalculationAPITester:
     def __init__(self, base_url="https://realestate-mvp-2.preview.emergentagent.com"):
