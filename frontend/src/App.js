@@ -2844,8 +2844,9 @@ const FicheProjet = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate }
 // Main App Component
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [projects, setProjects] = useState(mockProjects);
+  const [projects, setProjects] = useState([]);  // Start with empty array
   const [selectedProject, setSelectedProject] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
