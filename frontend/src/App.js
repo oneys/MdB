@@ -2280,12 +2280,21 @@ const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
 // Main App Component
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [projects] = useState(mockProjects);
+  const [projects, setProjects] = useState(mockProjects);
   const [selectedProject, setSelectedProject] = useState(null);
 
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
     setActiveTab("project");
+  };
+
+  const handleProjectUpdate = (updatedProject) => {
+    setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+    setSelectedProject(updatedProject);
+  };
+
+  const handleProjectCreate = (newProject) => {
+    setProjects(prev => [...prev, newProject]);
   };
 
   return (
@@ -2305,11 +2314,25 @@ const MainApp = () => {
               setSelectedProject(null);
               setActiveTab("dashboard");
             }}
+            onProjectUpdate={handleProjectUpdate}
           />
         ) : (
           <>
-            {activeTab === "dashboard" && <Dashboard projects={projects} onProjectSelect={handleProjectSelect} />}
-            {activeTab === "pipeline" && <Pipeline projects={projects} onProjectSelect={handleProjectSelect} />}
+            {activeTab === "dashboard" && (
+              <Dashboard 
+                projects={projects} 
+                onProjectSelect={handleProjectSelect}
+                onProjectCreate={handleProjectCreate}
+              />
+            )}
+            {activeTab === "pipeline" && (
+              <Pipeline 
+                projects={projects} 
+                onProjectSelect={handleProjectSelect}
+                onProjectUpdate={handleProjectUpdate}
+                onProjectCreate={handleProjectCreate}
+              />
+            )}
             {activeTab === "estimateur" && <Estimateur />}
           </>
         )}
