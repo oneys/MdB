@@ -1960,7 +1960,7 @@ const DataroomPanel = ({ project }) => {
               Glissez-déposez vos documents ici
             </h3>
             <p className="text-slate-500 mb-4">
-              Ou cliquez pour sélectionner des fichiers (PDF, Images, Word, Excel)
+              Ou cliquez pour sélectionner des fichiers
             </p>
             
             <div className="flex items-center justify-center gap-4 mb-4">
