@@ -1557,7 +1557,9 @@ async def get_projects(current_user: User = Depends(require_auth)):
 # Original create_project endpoint removed - replaced with new implementation below
 
 @api_router.post("/projects", response_model=ProjectResponse)
+@limiter.limit("5/minute")  # Limit project creation
 async def create_project(
+    request: Request,
     project: ProjectCreate,
     current_user: User = Depends(require_auth)
 ):
