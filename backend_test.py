@@ -739,25 +739,43 @@ startxref
                 print(f"   • {test['test_name']}")
 
 def main():
-    print("🏢 Starting Tax Calculation API Tests")
+    print("🏢 Starting Comprehensive Backend API Tests")
     print("="*60)
     
     tester = TaxCalculationAPITester()
     
+    # Setup authentication first
+    print("\n🔐 PHASE 1: AUTHENTICATION")
+    if not tester.setup_authentication():
+        print("❌ Authentication failed - cannot proceed with authenticated tests")
+        tester.print_summary()
+        return 1
+    
     # Run all tests
-    print("\n1. Testing API Health...")
+    print("\n🌐 PHASE 2: API HEALTH")
     tester.test_api_health()
     
-    print("\n2. Testing Core Business Cases...")
+    print("\n🧮 PHASE 3: CORE BUSINESS CALCULATIONS")
     tester.test_case_a_tva_marge_mdb()
     tester.test_case_b_tva_normale()
     tester.test_case_c_exoneration()
-    
-    print("\n3. Testing Field Validation...")
     tester.test_comprehensive_field_validation()
     
-    print("\n4. Testing Projects Endpoints...")
-    tester.test_projects_endpoints()
+    print("\n📁 PHASE 4: PROJECT MANAGEMENT")
+    if tester.create_test_project():
+        print("\n📤 PHASE 5: DOCUMENT MANAGEMENT")
+        tester.test_document_upload()
+        tester.test_document_in_project_list()
+        tester.test_document_download()
+        
+        print("\n📄 PHASE 6: PDF EXPORT")
+        tester.test_pdf_export_bank()
+        tester.test_pdf_export_notary()
+        
+        print("\n🔄 PHASE 7: DYNAMIC CALCULATIONS")
+        tester.test_dynamic_calculations()
+    else:
+        print("❌ Cannot proceed with document and export tests without test project")
     
     # Print summary
     tester.print_summary()
