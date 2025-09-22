@@ -957,12 +957,7 @@ const ProjectEditForm = ({ project, onClose, onUpdate }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    const updatedProject = {
-      ...project,
-      ...formData,
-      marge_estimee: formData.prix_vente_ttc - formData.prix_achat_ttc - formData.travaux_ttc - formData.frais_agence_ttc,
-      updated_at: new Date().toISOString()
-    };
+    const updatedProject = ProjectUtils.updateProjectFinancials(project, formData);
 
     onUpdate(updatedProject);
   };
