@@ -1116,20 +1116,21 @@ const ProjectCreateForm = ({ onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    const newProject = {
-      id: `project_${Date.now()}`,
-      ...formData,
-      status: 'DETECTE',
-      marge_estimee: formData.prix_vente_ttc - formData.prix_achat_ttc - formData.travaux_ttc - formData.frais_agence_ttc,
-      tri_estime: 0.15,
-      flags: {},
-      milestones: {},
-      financing: {},
-      owner_id: 'current_user',
-      team_members: [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    const newProject = ProjectUtils.createProject(
+      `project_${Date.now()}`,
+      formData.label,
+      formData.address,
+      'DETECTE',
+      formData.regime_tva,
+      formData.prix_achat_ttc,
+      formData.prix_vente_ttc,
+      formData.travaux_ttc,
+      formData.frais_agence_ttc,
+      {}
+    );
+
+    // Override owner_id for current user
+    newProject.owner_id = 'current_user';
 
     onSubmit(newProject);
   };
