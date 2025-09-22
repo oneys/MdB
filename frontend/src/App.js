@@ -1257,7 +1257,7 @@ const ProjectCreateForm = ({ onClose, onSubmit }) => {
 // Duplicate ProjectEditForm component removed - using the one defined earlier
 
 // Pipeline Component (with role-based access)
-const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate }) => {
+const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectStatusUpdate, onProjectCreate }) => {
   const { user } = useAuth();
   const [localProjects, setLocalProjects] = useState(projects);
   const [showCreateProject, setShowCreateProject] = useState(false);
