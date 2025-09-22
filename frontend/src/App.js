@@ -2388,7 +2388,7 @@ const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
               project={project}
               onClose={() => setShowEditProject(false)}
               onUpdate={(updatedProject) => {
-                onProjectUpdate && onProjectUpdate(updatedProject);
+                handleProjectEdit(updatedProject);
                 setShowEditProject(false);
               }}
             />
