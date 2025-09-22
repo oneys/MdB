@@ -1879,6 +1879,8 @@ const DataroomPanel = ({ project }) => {
 
   const downloadFile = async (document) => {
     try {
+      console.log(`Downloading document: ${document.filename} (ID: ${document.id})`);
+      
       const response = await axios.get(
         `${API}/projects/${project.id}/documents/${document.id}/download`,
         {
@@ -1891,14 +1893,20 @@ const DataroomPanel = ({ project }) => {
       const url = window.URL.createObjectURL(new window.Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', document.filename);
+      link.setAttribute('download', document.filename || `document_${document.id}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      
+      console.log(`✅ Download successful: ${document.filename}`);
     } catch (error) {
       console.error('Download error:', error);
-      console.error(`Erreur lors du téléchargement: ${error.response?.data?.detail || error.message}`);
+      if (error.response?.status === 404) {
+        alert(`Document non trouvé: ${document.filename}`);
+      } else {
+        alert(`Erreur lors du téléchargement de ${document.filename}: ${error.response?.data?.detail || error.message}`);
+      }
     }
   };
 
