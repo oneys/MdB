@@ -1111,6 +1111,11 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
 
   const accessibleProjects = getAccessibleProjects();
 
+  const handleMouseDown = (e, projectId) => {
+    setMouseDownPos({ x: e.clientX, y: e.clientY });
+    setDraggedProjectId(null);
+  };
+
   const handleDragStart = (e, projectId) => {
     // Only allow drag if user has write access
     if (user?.role === 'INVITE') {
@@ -1118,7 +1123,7 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
       return;
     }
     
-    setIsDragging(true);
+    setDraggedProjectId(projectId);
     e.dataTransfer.setData('text/plain', projectId);
     e.dataTransfer.effectAllowed = 'move';
     
@@ -1130,10 +1135,34 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
 
   const handleDragEnd = (e) => {
     e.target.style.opacity = '1';
-    // Reset dragging state after a small delay to avoid immediate click
-    setTimeout(() => {
-      setIsDragging(false);
-    }, 100);
+  };
+
+  const handleClick = (e, project) => {
+    // Check if this was a drag operation
+    if (draggedProjectId === project.id) {
+      // This was a drag, don't open the project
+      setDraggedProjectId(null);
+      return;
+    }
+
+    // Check if mouse moved significantly (indicating drag attempt)
+    if (mouseDownPos) {
+      const distance = Math.sqrt(
+        Math.pow(e.clientX - mouseDownPos.x, 2) + 
+        Math.pow(e.clientY - mouseDownPos.y, 2)
+      );
+      
+      // If mouse moved more than 5 pixels, consider it a drag attempt
+      if (distance > 5) {
+        setMouseDownPos(null);
+        return;
+      }
+    }
+
+    // This is a legitimate click
+    setMouseDownPos(null);
+    setDraggedProjectId(null);
+    onProjectSelect(project);
   };
 
   const handleDragOver = (e) => {
