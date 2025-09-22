@@ -2070,17 +2070,25 @@ const DataroomPanel = ({ project }) => {
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => exportPDF('bank')}
+              disabled={uploading}
+            >
               <Download className="h-4 w-4 mr-2" />
               Dossier Banque PDF
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => exportPDF('notary')}
+              disabled={uploading}
+            >
               <Download className="h-4 w-4 mr-2" />
               Dossier Notaire PDF
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" disabled>
               <Upload className="h-4 w-4 mr-2" />
-              Archive ZIP complète
+              Archive ZIP (bientôt)
             </Button>
           </div>
         </CardContent>
