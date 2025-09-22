@@ -1895,7 +1895,7 @@ const DataroomPanel = ({ project }) => {
   };
 
   const deleteFile = async (document) => {
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${document.filename} ?`)) {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${document.filename} ?`)) {
       return;
     }
 
