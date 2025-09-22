@@ -1351,6 +1351,20 @@ async def create_project(
     
     return ProjectResponse(**new_project)
 
+@api_router.get("/projects/{project_id}", response_model=ProjectResponse)
+async def get_project(
+    project_id: str,
+    current_user: User = Depends(require_auth)
+):
+    """Get project by ID"""
+    await check_project_access(project_id, current_user, "read")
+    
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    return ProjectResponse(**project)
+
 @api_router.patch("/projects/{project_id}")
 async def update_project(
     project_id: str,
