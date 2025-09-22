@@ -2467,9 +2467,10 @@ const FicheProjet = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate }
               <h1 className="text-3xl font-bold text-slate-900 mb-2">{project.label}</h1>
               <p className="text-lg text-slate-600">{project.address.line1}, {project.address.city}</p>
               <div className="flex items-center gap-4 mt-2">
-                <Badge className="bg-amber-100 text-amber-700 border-transparent">
-                  {project.status}
-                </Badge>
+                <ProjectStatusEditor 
+                  project={project} 
+                  onStatusUpdate={handleStatusUpdate}
+                />
                 <Badge variant="outline" className="border-amber-300 text-amber-700">
                   {project.regime_tva}
                 </Badge>
