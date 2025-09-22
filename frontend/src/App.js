@@ -385,7 +385,7 @@ const statusConfig = {
 };
 
 // Navigation Component
-const Navigation = ({ activeTab, setActiveTab, selectedProject, setSelectedProject }) => {
+const Navigation = ({ activeTab, setActiveTab, selectedProject, setSelectedProject, onNavigateFromProject }) => {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
