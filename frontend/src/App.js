@@ -1368,8 +1368,12 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectStatusU
       )
     );
     
-    // Notify parent component to update global state
-    onProjectUpdate(updatedProject);
+    // Use efficient status update if available, otherwise full project update
+    if (onProjectStatusUpdate) {
+      onProjectStatusUpdate(projectId, newStatus);
+    } else {
+      onProjectUpdate(updatedProject);
+    }
     
     // Reset drag state
     setDraggedProjectId(null);
