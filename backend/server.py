@@ -757,8 +757,169 @@ class TaxCalculationService:
         
         return dmto, explain
     
-    def calculate_notaire_fees(self, prix_achat_ttc: float) -> tuple[float, float, float, str]:
+    def calculate_emoluments(self, prix_achat_ttc: float) -> float:
+        """Calculate notary emoluments based on purchase price with advanced logic"""
         emoluments = 0.0
+        prix_ht = prix_achat_ttc / 1.20  # Convert to HT for calculation base
+        
+        for tranche in self.notaire_baremes["emoluments_tranches"]:
+            min_val = tranche["min"]
+            max_val = tranche["max"]
+            taux = tranche["taux"]
+            
+            if max_val is None:  # Last tranche
+                if prix_ht > min_val:
+                    emoluments += (prix_ht - min_val) * taux
+            else:
+                if prix_ht > min_val:
+                    applicable_amount = min(prix_ht, max_val) - min_val
+                    emoluments += applicable_amount * taux
+        
+        # Apply complexity factor for high-value transactions
+        if prix_ht > 1000000:  # > 1M€
+            complexity_factor = 1.05  # 5% supplement for complex transactions
+            emoluments *= complexity_factor
+            logging.info(f"Applied complexity factor {complexity_factor} for high-value transaction")
+        
+        return round(emoluments, 2)
+    
+    def calculate_advanced_tri(self, projet_data: dict, market_context: dict = None) -> dict:
+        """Calculate advanced TRI with market factors and risk analysis"""
+        prix_achat = projet_data.get('prix_achat_ttc', 0)
+        prix_vente = projet_data.get('prix_vente_ttc', 0) 
+        travaux = projet_data.get('travaux_ttc', 0)
+        frais_agence = projet_data.get('frais_agence_ttc', 0)
+        
+        # Basic calculation
+        investissement_total = prix_achat + travaux + frais_agence
+        benefice_brut = prix_vente - investissement_total
+        
+        if investissement_total == 0:
+            return {"tri_basic": 0, "tri_adjusted": 0, "risk_factors": []}
+        
+        tri_basic = benefice_brut / investissement_total
+        
+        # Risk adjustments
+        risk_factors = []
+        risk_adjustment = 1.0
+        
+        # Department risk factor
+        dept = projet_data.get('address', {}).get('dept', '75')
+        dept_risk = {
+            '75': 0.95,   # Paris - lower risk
+            '92': 0.96,   # Hauts-de-Seine - lower risk  
+            '93': 1.05,   # Seine-Saint-Denis - higher risk
+            '94': 1.02,   # Val-de-Marne - moderate risk
+            '95': 1.03    # Val-d'Oise - moderate risk
+        }
+        dept_factor = dept_risk.get(dept, 1.0)
+        risk_adjustment *= dept_factor
+        if dept_factor != 1.0:
+            risk_factors.append(f"Risque géographique dept {dept}: {dept_factor:.2f}")
+        
+        # Renovation intensity risk
+        if prix_achat > 0:
+            renovation_ratio = travaux / prix_achat
+            if renovation_ratio > 0.5:  # Heavy renovation
+                renovation_risk = 0.9  # 10% risk penalty
+                risk_adjustment *= renovation_risk
+                risk_factors.append(f"Gros travaux ({renovation_ratio:.1%}): {renovation_risk:.2f}")
+            elif renovation_ratio > 0.3:  # Moderate renovation
+                renovation_risk = 0.95  # 5% risk penalty
+                risk_adjustment *= renovation_risk  
+                risk_factors.append(f"Travaux modérés ({renovation_ratio:.1%}): {renovation_risk:.2f}")
+        
+        # Market timing factor (based on creation date)
+        creation_date = datetime.fromisoformat(projet_data.get('created_at', datetime.now().isoformat()))
+        months_age = (datetime.now(timezone.utc) - creation_date.replace(tzinfo=timezone.utc)).days / 30
+        if months_age > 6:  # Old projects have higher risk
+            age_risk = max(0.85, 1 - (months_age * 0.02))  # Max 15% penalty
+            risk_adjustment *= age_risk
+            risk_factors.append(f"Projet ancien ({months_age:.1f} mois): {age_risk:.2f}")
+        
+        # Price range risk
+        if prix_achat > 2000000:  # Luxury market
+            luxury_risk = 0.92  # Higher volatility
+            risk_adjustment *= luxury_risk
+            risk_factors.append(f"Marché luxe (>{2000000:,}€): {luxury_risk:.2f}")
+        elif prix_achat < 150000:  # Low-end market
+            lowend_risk = 0.95  # Liquidity risk
+            risk_adjustment *= lowend_risk
+            risk_factors.append(f"Marché entrée de gamme (<{150000:,}€): {lowend_risk:.2f}")
+        
+        tri_adjusted = tri_basic * risk_adjustment
+        
+        return {
+            "tri_basic": round(tri_basic, 4),  
+            "tri_adjusted": round(tri_adjusted, 4),
+            "risk_adjustment": round(risk_adjustment, 4),
+            "risk_factors": risk_factors,
+            "investissement_total": investissement_total,
+            "benefice_brut": benefice_brut,
+            "benefice_ajuste": round(benefice_brut * risk_adjustment, 2)
+        }
+    
+    def calculate_market_indicators(self, projet_data: dict) -> dict:
+        """Calculate market indicators and comparables"""
+        dept = projet_data.get('address', {}).get('dept', '75')
+        prix_achat = projet_data.get('prix_achat_ttc', 0)
+        prix_vente = projet_data.get('prix_vente_ttc', 0)
+        
+        # Estimated surface (rough estimation based on price)
+        estimated_surface = 0
+        if dept in ['75', '92']:  # Paris/Hauts-de-Seine
+            estimated_surface = prix_achat / 10000  # ~10k€/m² assumption
+        else:
+            estimated_surface = prix_achat / 6000   # ~6k€/m² assumption
+            
+        # Market indicators
+        indicators = {
+            "estimated_surface_m2": round(estimated_surface, 1),
+            "prix_m2_achat": round(prix_achat / estimated_surface, 0) if estimated_surface > 0 else 0,
+            "prix_m2_vente": round(prix_vente / estimated_surface, 0) if estimated_surface > 0 else 0,
+            "plus_value_m2": 0,
+            "dept_market_trend": self._get_dept_trend(dept),
+            "liquidity_score": self._calculate_liquidity_score(dept, prix_achat)
+        }
+        
+        if estimated_surface > 0:
+            indicators["plus_value_m2"] = indicators["prix_m2_vente"] - indicators["prix_m2_achat"]
+            
+        return indicators
+    
+    def _get_dept_trend(self, dept: str) -> str:
+        """Get market trend for department"""
+        trends = {
+            '75': 'stable',
+            '92': 'croissant', 
+            '93': 'volatile',
+            '94': 'stable',
+            '95': 'croissant'
+        }
+        return trends.get(dept, 'stable')
+    
+    def _calculate_liquidity_score(self, dept: str, prix: float) -> int:
+        """Calculate liquidity score (1-10)"""
+        base_score = {
+            '75': 8,  # High liquidity
+            '92': 7,
+            '93': 5,
+            '94': 6, 
+            '95': 6
+        }.get(dept, 5)
+        
+        # Adjust for price range
+        if prix > 1500000:
+            base_score -= 2  # Luxury harder to sell
+        elif prix < 200000:
+            base_score -= 1  # Very low end
+        elif 300000 <= prix <= 800000:
+            base_score += 1  # Sweet spot
+            
+        return max(1, min(10, base_score))
+
+    def calculate_notaire_fees(self, prix_achat_ttc: float) -> tuple[float, float, float, str]:
+        emoluments = self.calculate_emoluments(prix_achat_ttc)
         reste = prix_achat_ttc
         explain_parts = []
         
@@ -772,17 +933,14 @@ class TaxCalculationService:
             
             if max_val is None:
                 montant_tranche = reste * taux
-                emoluments += montant_tranche
                 explain_parts.append(f"Au-delà de {min_val:,.0f} €: {reste:,.2f} € × {taux:.3%} = {montant_tranche:,.2f} €")
                 reste = 0
             else:
                 montant_applicable = min(reste, max_val - min_val)
                 montant_tranche = montant_applicable * taux
-                emoluments += montant_tranche
                 explain_parts.append(f"De {min_val:,.0f} € à {max_val:,.0f} €: {montant_applicable:,.2f} € × {taux:.3%} = {montant_tranche:,.2f} €")
                 reste -= montant_applicable
         
-        emoluments = self._decimal_round(emoluments)
         csi = self._decimal_round(prix_achat_ttc * self.notaire_baremes["csi_rate"])
         debours = self.notaire_baremes["debours_forfait"]
         
