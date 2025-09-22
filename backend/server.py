@@ -309,13 +309,31 @@ class Project(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProjectCreate(BaseModel):
-    label: str
+    label: str = Field(..., min_length=3, max_length=200, regex=r'^[a-zA-Z0-9\s\-_\.\,\(\)]+$')
     address: Dict[str, str] = Field(default_factory=dict)
     regime_tva: RegimeTVA = RegimeTVA.MARGE
-    prix_achat_ttc: float = 0
-    prix_vente_ttc: float = 0
-    travaux_ttc: float = 0
-    frais_agence_ttc: float = 0
+    prix_achat_ttc: float = Field(..., ge=1000, le=50000000, description="Prix d'achat entre 1K€ et 50M€")
+    prix_vente_ttc: float = Field(..., ge=1000, le=50000000, description="Prix de vente entre 1K€ et 50M€")
+    travaux_ttc: float = Field(..., ge=0, le=10000000, description="Travaux entre 0€ et 10M€")
+    frais_agence_ttc: float = Field(..., ge=0, le=1000000, description="Frais agence entre 0€ et 1M€")
+    
+    @validator('prix_vente_ttc')
+    def validate_margin_positive(cls, v, values):
+        if 'prix_achat_ttc' in values and v <= values['prix_achat_ttc']:
+            raise ValueError('Le prix de vente doit être supérieur au prix d\'achat')
+        return v
+    
+    @validator('travaux_ttc')
+    def validate_reasonable_renovation(cls, v, values):
+        if 'prix_achat_ttc' in values and v > values['prix_achat_ttc'] * 2:
+            raise ValueError('Travaux ne peuvent pas dépasser 200% du prix d\'achat')
+        return v
+        
+    @validator('frais_agence_ttc')
+    def validate_agency_fees(cls, v, values):
+        if 'prix_achat_ttc' in values and v > values['prix_agence_ttc'] * 0.15:
+            raise ValueError('Frais agence ne peuvent pas dépasser 15% du prix d\'achat')
+        return v
 
 class ProjectUpdate(BaseModel):
     label: Optional[str] = None
