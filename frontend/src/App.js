@@ -2973,6 +2973,7 @@ const MainApp = () => {
               setActiveTab("dashboard");
             }}
             onProjectUpdate={handleProjectUpdate}
+            onProjectStatusUpdate={handleProjectStatusUpdate}
           />
         ) : (
           <>
