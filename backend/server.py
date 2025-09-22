@@ -1870,8 +1870,8 @@ async def export_notary_dossier(
         "Attestation d'assurance"
     ]
     
-    for doc in required_docs:
-        story.append(Paragraph(f"☐ {doc}", styles['Normal']))
+    for required_doc in required_docs:
+        story.append(Paragraph(f"☐ {required_doc}", styles['Normal']))
     
     story.append(Spacer(1, 40))
     story.append(Paragraph("Document généré par MarchndsBiens", styles['Normal']))
