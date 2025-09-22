@@ -109,9 +109,10 @@ app = FastAPI(
     version="1.0.0",
     description="API complète pour marchands de biens immobiliers"
 )
-
-# Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Add error handling middleware
+app.add_middleware(ErrorHandlingMiddleware)
 
 # Security
 security = HTTPBearer(auto_error=False)
