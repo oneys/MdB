@@ -1957,7 +1957,7 @@ const DataroomPanel = ({ project }) => {
           <div className="text-center">
             <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-900 mb-2">
-              Glissez-déposez vos documents ici
+              {uploading ? 'Upload en cours...' : 'Glissez-déposez vos documents ici'}
             </h3>
             <p className="text-slate-500 mb-4">
               Ou cliquez pour sélectionner des fichiers
