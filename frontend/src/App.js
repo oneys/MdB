@@ -519,8 +519,9 @@ const Navigation = ({ activeTab, setActiveTab, selectedProject, setSelectedProje
 };
 
 // Dashboard Component (unchanged structure but now shows user-specific data)
-const Dashboard = ({ projects, onProjectSelect }) => {
+const Dashboard = ({ projects, onProjectSelect, onProjectCreate }) => {
   const { user } = useAuth();
+  const [showCreateProject, setShowCreateProject] = useState(false);
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
