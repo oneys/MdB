@@ -1802,12 +1802,16 @@ const TasksPanel = ({ project, onProjectUpdate }) => {
 
 // Composant Dataroom pour gestion des documents
 const DataroomPanel = ({ project }) => {
-  const [files, setFiles] = useState([
-    { id: 1, name: "Compromis_signé.pdf", type: "JURIDIQUE", size: "2.4 MB", date: "2025-01-18" },
-    { id: 2, name: "Diagnostic_technique.pdf", type: "TECHNIQUE", size: "1.8 MB", date: "2025-01-20" },
-    { id: 3, name: "Plan_financement.xlsx", type: "FINANCIER", size: "0.5 MB", date: "2025-01-22" }
-  ]);
+  const [files, setFiles] = useState(project.documents || []);
   const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('JURIDIQUE');
+  const fileInputRef = React.useRef(null);
+
+  // Sync with project documents when project changes
+  React.useEffect(() => {
+    setFiles(project.documents || []);
+  }, [project.documents]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -1819,21 +1823,93 @@ const DataroomPanel = ({ project }) => {
     setDragOver(false);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     setDragOver(false);
     
     const droppedFiles = Array.from(e.dataTransfer.files);
-    droppedFiles.forEach(file => {
-      const newFile = {
-        id: Date.now() + Math.random(),
-        name: file.name,
-        type: "ADMINISTRATIF", // Default category
-        size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        date: new Date().toISOString().split('T')[0]
-      };
-      setFiles(prev => [...prev, newFile]);
-    });
+    await uploadFiles(droppedFiles);
+  };
+
+  const handleFileSelect = async (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    await uploadFiles(selectedFiles);
+    e.target.value = ''; // Reset input
+  };
+
+  const uploadFiles = async (filesToUpload) => {
+    setUploading(true);
+    
+    for (const file of filesToUpload) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('category', selectedCategory);
+
+        const response = await axios.post(
+          `${API}/projects/${project.id}/documents`,
+          formData,
+          {
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+
+        if (response.data.document) {
+          setFiles(prev => [...prev, response.data.document]);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert(`Erreur lors de l'upload de ${file.name}: ${error.response?.data?.detail || error.message}`);
+      }
+    }
+    
+    setUploading(false);
+  };
+
+  const downloadFile = async (document) => {
+    try {
+      const response = await axios.get(
+        `${API}/projects/${project.id}/documents/${document.id}/download`,
+        {
+          withCredentials: true,
+          responseType: 'blob'
+        }
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', document.filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert(`Erreur lors du téléchargement: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const deleteFile = async (document) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${document.filename} ?`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `${API}/projects/${project.id}/documents/${document.id}`,
+        { withCredentials: true }
+      );
+
+      setFiles(prev => prev.filter(f => f.id !== document.id));
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert(`Erreur lors de la suppression: ${error.response?.data?.detail || error.message}`);
+    }
   };
 
   const getCategoryColor = (type) => {
@@ -1856,6 +1932,14 @@ const DataroomPanel = ({ project }) => {
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   return (
     <div className="space-y-6">
       {/* Zone de drop */}
@@ -1876,11 +1960,42 @@ const DataroomPanel = ({ project }) => {
               Glissez-déposez vos documents ici
             </h3>
             <p className="text-slate-500 mb-4">
-              Ou cliquez pour sélectionner des fichiers
+              Ou cliquez pour sélectionner des fichiers (PDF, Images, Word, Excel)
             </p>
-            <Button variant="outline">
+            
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Label htmlFor="category-select" className="text-sm font-medium">
+                Catégorie:
+              </Label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="JURIDIQUE">Juridique</SelectItem>
+                  <SelectItem value="TECHNIQUE">Technique</SelectItem>
+                  <SelectItem value="FINANCIER">Financier</SelectItem>
+                  <SelectItem value="ADMINISTRATIF">Administratif</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
+            <Button 
+              variant="outline" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
               <Upload className="h-4 w-4 mr-2" />
-              Choisir des fichiers
+              {uploading ? 'Upload en cours...' : 'Choisir des fichiers'}
             </Button>
           </div>
         </CardContent>
@@ -1889,7 +2004,7 @@ const DataroomPanel = ({ project }) => {
       {/* Organisation par catégories */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {['JURIDIQUE', 'TECHNIQUE', 'FINANCIER', 'ADMINISTRATIF'].map(category => {
-          const categoryFiles = files.filter(f => f.type === category);
+          const categoryFiles = files.filter(f => f.category === category);
           return (
             <Card key={category}>
               <CardHeader className="pb-3">
@@ -1907,16 +2022,33 @@ const DataroomPanel = ({ project }) => {
                     <div key={file.id} className="p-2 bg-slate-50 rounded-lg">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-slate-900 truncate">
-                            {file.name}
+                          <p className="text-xs font-medium text-slate-900 truncate" title={file.filename}>
+                            {file.filename}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {file.size} • {new Date(file.date).toLocaleDateString('fr-FR')}
+                            {formatFileSize(file.size)} • {new Date(file.uploaded_at).toLocaleDateString('fr-FR')}
                           </p>
                         </div>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                          <Download className="h-3 w-3" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0"
+                            onClick={() => downloadFile(file)}
+                            title="Télécharger"
+                          >
+                            <Download className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                            onClick={() => deleteFile(file)}
+                            title="Supprimer"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
