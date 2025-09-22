@@ -722,6 +722,22 @@ const Dashboard = ({ projects, onProjectSelect, onProjectCreate }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de création de projet depuis Dashboard */}
+      {showCreateProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Nouveau Projet</h2>
+            <ProjectCreateForm 
+              onClose={() => setShowCreateProject(false)}
+              onSubmit={(newProject) => {
+                onProjectCreate(newProject);
+                setShowCreateProject(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 
