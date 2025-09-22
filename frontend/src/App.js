@@ -379,35 +379,161 @@ const FinancialCalculator = {
   }
 };
 
-// Mock projects data with dynamic calculations
-const createMockProject = (id, label, address, status, regime_tva, prix_achat_ttc, prix_vente_ttc, travaux_ttc, frais_agence_ttc, flags = {}) => {
-  const baseProject = {
-    id,
-    label,
-    address,
-    status,
-    regime_tva,
-    prix_achat_ttc,
-    prix_vente_ttc,
-    travaux_ttc,
-    frais_agence_ttc,
-    flags,
-    milestones: {},
-    financing: {},
-    owner_id: "test-user-12345",
-    team_members: [],
-    documents: [],
-    tasks: [],
-    events: [],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  
-  // Calculate dynamic values
-  baseProject.marge_estimee = calculateMarge(baseProject);
-  baseProject.tri_estime = calculateTRI(baseProject);
-  
-  return baseProject;
+// Project state management utilities
+const ProjectUtils = {
+  createProject: (id, label, address, status, regime_tva, prix_achat_ttc, prix_vente_ttc, travaux_ttc, frais_agence_ttc, flags = {}) => {
+    const baseProject = {
+      id,
+      label,
+      address,
+      status,
+      regime_tva,
+      prix_achat_ttc,
+      prix_vente_ttc,
+      travaux_ttc,
+      frais_agence_ttc,
+      flags,
+      milestones: {},
+      financing: {},
+      owner_id: "test-user-12345",
+      team_members: [],
+      documents: [],
+      tasks: [],
+      events: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    // Calculate dynamic values
+    baseProject.marge_estimee = FinancialCalculator.calculateMarge(baseProject);
+    baseProject.tri_estime = FinancialCalculator.calculateTRI(baseProject);
+    baseProject.market_indicators = FinancialCalculator.calculateMarketIndicators(baseProject);
+    
+    return baseProject;
+  },
+
+  updateProjectFinancials: (project, updates) => {
+    const updatedProject = { ...project, ...updates, updated_at: new Date().toISOString() };
+    
+    // Recalculate dynamic values
+    updatedProject.marge_estimee = FinancialCalculator.calculateMarge(updatedProject);
+    updatedProject.tri_estime = FinancialCalculator.calculateTRI(updatedProject);
+    updatedProject.market_indicators = FinancialCalculator.calculateMarketIndicators(updatedProject);
+    
+    return updatedProject;
+  },
+
+  validateProject: (projectData) => {
+    const errors = [];
+    
+    if (!projectData.label || projectData.label.length < 3) {
+      errors.push("Le nom du projet doit contenir au moins 3 caractères");
+    }
+    
+    if (projectData.prix_achat_ttc <= 0) {
+      errors.push("Le prix d'achat doit être supérieur à 0");
+    }
+    
+    if (projectData.prix_vente_ttc <= projectData.prix_achat_ttc) {
+      errors.push("Le prix de vente doit être supérieur au prix d'achat");
+    }
+    
+    if (projectData.travaux_ttc < 0) {
+      errors.push("Les travaux ne peuvent pas être négatifs");
+    }
+    
+    if (projectData.frais_agence_ttc < 0) {
+      errors.push("Les frais d'agence ne peuvent pas être négatifs");
+    }
+    
+    // Business rules validation
+    if (projectData.travaux_ttc > projectData.prix_achat_ttc * 2) {
+      errors.push("Les travaux ne peuvent pas dépasser 200% du prix d'achat");
+    }
+    
+    if (projectData.frais_agence_ttc > projectData.prix_achat_ttc * 0.15) {
+      errors.push("Les frais d'agence ne peuvent pas dépasser 15% du prix d'achat");
+    }
+    
+    return errors;
+  },
+
+  sortProjects: (projects, sortBy, sortOrder = 'desc') => {
+    return [...projects].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'tri':
+          aValue = a.tri_estime || 0;
+          bValue = b.tri_estime || 0;
+          break;
+        case 'marge':
+          aValue = a.marge_estimee || 0;
+          bValue = b.marge_estimee || 0;
+          break;
+        case 'created_at':
+          aValue = new Date(a.created_at);
+          bValue = new Date(b.created_at);
+          break;
+        case 'updated_at':
+          aValue = new Date(a.updated_at);
+          bValue = new Date(b.updated_at);
+          break;
+        case 'prix_achat':
+          aValue = a.prix_achat_ttc || 0;
+          bValue = b.prix_achat_ttc || 0;
+          break;
+        default:
+          aValue = a.label || '';
+          bValue = b.label || '';
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  },
+
+  filterProjects: (projects, filters) => {
+    return projects.filter(project => {
+      // Status filter
+      if (filters.status && project.status !== filters.status) {
+        return false;
+      }
+      
+      // Department filter
+      if (filters.dept && project.address?.dept !== filters.dept) {
+        return false;
+      }
+      
+      // Price range filter
+      if (filters.minPrice && project.prix_achat_ttc < filters.minPrice) {
+        return false;
+      }
+      if (filters.maxPrice && project.prix_achat_ttc > filters.maxPrice) {
+        return false;
+      }
+      
+      // TRI filter
+      if (filters.minTRI && project.tri_estime < filters.minTRI) {
+        return false;
+      }
+      
+      // Search filter
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        const matchesLabel = project.label?.toLowerCase().includes(searchLower);
+        const matchesAddress = project.address?.city?.toLowerCase().includes(searchLower);
+        if (!matchesLabel && !matchesAddress) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }
 };
 
 const mockProjects = [
