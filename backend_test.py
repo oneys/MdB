@@ -13,6 +13,8 @@ class TaxCalculationAPITester:
         self.tests_run = 0
         self.tests_passed = 0
         self.detailed_results = []
+        self.session_token = None
+        self.test_project_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, validate_response=None):
         """Run a single API test with optional response validation"""
