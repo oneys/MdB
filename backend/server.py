@@ -1555,8 +1555,304 @@ async def delete_document(
     
     return {"message": "Document deleted successfully"}
 
-# Continue with remaining endpoints (tasks, budget, files, events, PDF exports)
-# [Previous implementation remains unchanged]
+# Tasks API endpoints
+@api_router.post("/projects/{project_id}/tasks")
+async def create_task(
+    project_id: str,
+    task_data: dict,
+    current_user: User = Depends(require_auth)
+):
+    """Create new task for project"""
+    await check_project_access(project_id, current_user, "write")
+    
+    task = {
+        "id": str(uuid.uuid4()),
+        "title": task_data["title"],
+        "status": task_data.get("status", "pending"),
+        "due_date": task_data.get("due_date"),
+        "created_by": current_user.id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"tasks": task}}
+    )
+    
+    return {"message": "Task created successfully", "task": task}
+
+@api_router.patch("/projects/{project_id}/tasks/{task_id}")
+async def update_task(
+    project_id: str,
+    task_id: str, 
+    task_data: dict,
+    current_user: User = Depends(require_auth)
+):
+    """Update task status"""
+    await check_project_access(project_id, current_user, "write")
+    
+    await db.projects.update_one(
+        {"id": project_id, "tasks.id": task_id},
+        {"$set": {"tasks.$.status": task_data["status"]}}
+    )
+    
+    return {"message": "Task updated successfully"}
+
+# PDF Export endpoints
+@api_router.get("/projects/{project_id}/export/bank")
+async def export_bank_dossier(
+    project_id: str,
+    current_user: User = Depends(require_auth)
+):
+    """Generate bank dossier PDF"""
+    await check_project_access(project_id, current_user, "read")
+    
+    # Get project data
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Get estimate for this project
+    estimate_data = await get_project_estimate(project)
+    
+    # Generate PDF
+    buffer = io.BytesIO()
+    
+    # Create PDF document
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        textColor='#d97706',
+        alignment=1  # Center
+    )
+    
+    # Build PDF content
+    story = []
+    
+    # Title
+    story.append(Paragraph("DOSSIER BANQUE", title_style))
+    story.append(Spacer(1, 20))
+    
+    # Project info
+    story.append(Paragraph(f"<b>Projet:</b> {project.get('label', 'N/A')}", styles['Normal']))
+    if project.get('address'):
+        story.append(Paragraph(f"<b>Localisation:</b> {project['address'].get('line1', '')}, {project['address'].get('city', '')}", styles['Normal']))
+    story.append(Paragraph(f"<b>Statut:</b> {project.get('status', 'N/A')}", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Financial analysis
+    story.append(Paragraph("ANALYSE FINANCIÈRE", styles['Heading2']))
+    story.append(Spacer(1, 12))
+    
+    # Create financial table
+    financial_data = [
+        ['Poste', 'Montant TTC'],
+        ['Prix d\'achat', f"{project.get('prix_achat_ttc', 0):,.2f} €"],
+        ['Travaux estimés', f"{project.get('travaux_ttc', 0):,.2f} €"],
+        ['Frais agence', f"{project.get('frais_agence_ttc', 0):,.2f} €"],
+        ['Prix de vente cible', f"{project.get('prix_vente_ttc', 0):,.2f} €"],
+        ['Marge nette estimée', f"{project.get('marge_estimee', 0):,.2f} €"]
+    ]
+    
+    t = Table(financial_data, colWidths=[3*inch, 2*inch])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), '#f59e0b'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), '#ffffff'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), '#fffbeb'),
+        ('GRID', (0, 0), (-1, -1), 1, '#d97706')
+    ]))
+    
+    story.append(t)
+    story.append(Spacer(1, 20))
+    
+    # Estimate details if available
+    if estimate_data:
+        story.append(Paragraph("CALCULS FISCAUX", styles['Heading2']))
+        story.append(Spacer(1, 12))
+        
+        fiscal_data = [
+            ['Taxe/Frais', 'Montant'],
+            ['DMTO', f"{estimate_data.get('dmto', 0):,.2f} €"],
+            ['Émoluments notaire', f"{estimate_data.get('emoluments', 0):,.2f} €"],
+            ['CSI', f"{estimate_data.get('csi', 0):,.2f} €"],
+            ['Débours', f"{estimate_data.get('debours', 0):,.2f} €"],
+            ['TVA collectée', f"{estimate_data.get('tva_collectee', 0):,.2f} €"],
+            ['TVA sur marge', f"{estimate_data.get('tva_marge', 0):,.2f} €"]
+        ]
+        
+        t2 = Table(fiscal_data, colWidths=[3*inch, 2*inch])
+        t2.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), '#10b981'),
+            ('TEXTCOLOR', (0, 0), (-1, 0), '#ffffff'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), '#f0fdf4'),
+            ('GRID', (0, 0), (-1, -1), 1, '#10b981')
+        ]))
+        
+        story.append(t2)
+    
+    # Documents list
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("DOCUMENTS FOURNIS", styles['Heading2']))
+    story.append(Spacer(1, 12))
+    
+    documents = project.get('documents', [])
+    if documents:
+        for doc in documents:
+            story.append(Paragraph(f"• {doc.get('filename', 'N/A')} ({doc.get('category', 'N/A')})", styles['Normal']))
+    else:
+        story.append(Paragraph("Aucun document fourni", styles['Normal']))
+    
+    # Footer
+    story.append(Spacer(1, 40))
+    story.append(Paragraph("Document généré automatiquement par MarchndsBiens", styles['Normal']))
+    story.append(Paragraph(f"Date: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+    
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        io.BytesIO(buffer.read()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=dossier_banque_{project.get('label', 'projet').replace(' ', '_')}.pdf"}
+    )
+
+@api_router.get("/projects/{project_id}/export/notary")
+async def export_notary_dossier(
+    project_id: str,
+    current_user: User = Depends(require_auth)
+):
+    """Generate notary dossier PDF"""
+    await check_project_access(project_id, current_user, "read")
+    
+    # Similar to bank dossier but with notary-specific content
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        textColor='#059669',
+        alignment=1
+    )
+    
+    story = []
+    
+    # Title
+    story.append(Paragraph("DOSSIER NOTAIRE", title_style))
+    story.append(Spacer(1, 20))
+    
+    # Project details
+    story.append(Paragraph(f"<b>Projet:</b> {project.get('label', 'N/A')}", styles['Normal']))
+    if project.get('address'):
+        story.append(Paragraph(f"<b>Adresse:</b> {project['address'].get('line1', '')}", styles['Normal']))
+        story.append(Paragraph(f"<b>Ville:</b> {project['address'].get('city', '')}", styles['Normal']))
+        story.append(Paragraph(f"<b>Département:</b> {project['address'].get('dept', '')}", styles['Normal']))
+    
+    story.append(Paragraph(f"<b>Régime TVA:</b> {project.get('regime_tva', 'N/A')}", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Legal information
+    story.append(Paragraph("INFORMATIONS JURIDIQUES", styles['Heading2']))
+    story.append(Spacer(1, 12))
+    
+    legal_data = [
+        ['Élément', 'Valeur'],
+        ['Prix d\'acquisition TTC', f"{project.get('prix_achat_ttc', 0):,.2f} €"],
+        ['Régime fiscal', project.get('regime_tva', 'Non spécifié')],
+        ['Marchand de biens', 'Oui' if project.get('flags', {}).get('md_b_0715_ok') else 'Non'],
+        ['Date création', project.get('created_at', 'N/A')[:10] if project.get('created_at') else 'N/A']
+    ]
+    
+    t = Table(legal_data, colWidths=[3*inch, 2*inch])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), '#059669'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), '#ffffff'),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), '#f0fdfa'),
+        ('GRID', (0, 0), (-1, -1), 1, '#059669')
+    ]))
+    
+    story.append(t)
+    story.append(Spacer(1, 20))
+    
+    # Documents checklist
+    story.append(Paragraph("DOCUMENTS REQUIS", styles['Heading2']))
+    story.append(Spacer(1, 12))
+    
+    required_docs = [
+        "Compromis de vente signé",
+        "Diagnostics techniques",
+        "Plan de financement",
+        "Justificatifs d'identité",
+        "Justificatifs de domicile",
+        "Attestation d'assurance"
+    ]
+    
+    for doc in required_docs:
+        story.append(Paragraph(f"☐ {doc}", styles['Normal']))
+    
+    story.append(Spacer(1, 40))
+    story.append(Paragraph("Document généré par MarchndsBiens", styles['Normal']))
+    story.append(Paragraph(f"Date: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+    
+    doc.build(story)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        io.BytesIO(buffer.read()),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=dossier_notaire_{project.get('label', 'projet').replace(' ', '_')}.pdf"}
+    )
+
+async def get_project_estimate(project):
+    """Get estimate data for a project"""
+    try:
+        # Create estimate input from project data
+        estimate_input = EstimateInput(
+            dept=project['address'].get('dept', '75'),
+            regime_tva=RegimeTVA(project.get('regime_tva', 'MARGE')),
+            prix_achat_ttc=project.get('prix_achat_ttc', 0),
+            prix_vente_ttc=project.get('prix_vente_ttc', 0),
+            travaux_ttc=project.get('travaux_ttc', 0),
+            frais_agence_ttc=project.get('frais_agence_ttc', 0),
+            hypotheses=EstimateHypotheses(
+                md_b_0715_ok=project.get('flags', {}).get('md_b_0715_ok', False),
+                travaux_structurants=project.get('flags', {}).get('travaux_structurants', False)
+            )
+        )
+        
+        # Calculate estimate
+        tax_service = TaxCalculationService()
+        estimate = tax_service.calculate_estimate(estimate_input)
+        return estimate.dict()
+    except Exception as e:
+        logging.error(f"Error calculating estimate for project {project.get('id')}: {e}")
+        return None
 
 # Include the router in the main app
 app.include_router(api_router)
