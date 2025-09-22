@@ -304,21 +304,79 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Function to calculate dynamic TRI
-const calculateTRI = (project) => {
-  const investissement = project.prix_achat_ttc + project.travaux_ttc + project.frais_agence_ttc;
-  const benefice = project.prix_vente_ttc - investissement;
-  
-  if (investissement === 0) return 0;
-  
-  // Simple TRI calculation (benefice / investissement)
-  const tri = benefice / investissement;
-  return Math.max(0, Math.min(1, tri)); // Between 0 and 100%
-};
+// Advanced financial calculations
+const FinancialCalculator = {
+  calculateTRI: (project) => {
+    const investissement = project.prix_achat_ttc + project.travaux_ttc + project.frais_agence_ttc;
+    const benefice = project.prix_vente_ttc - investissement;
+    
+    if (investissement === 0) return 0;
+    
+    // Enhanced TRI calculation with risk factors
+    let tri_base = benefice / investissement;
+    
+    // Department risk adjustment
+    const deptRiskFactors = {
+      '75': 0.95,   // Paris - lower risk
+      '92': 0.96,   // Hauts-de-Seine
+      '93': 1.05,   // Seine-Saint-Denis - higher risk
+      '94': 1.02,   // Val-de-Marne
+      '95': 1.03    // Val-d'Oise
+    };
+    
+    const deptRisk = deptRiskFactors[project.address?.dept] || 1.0;
+    
+    // Renovation intensity risk
+    let renovationRisk = 1.0;
+    if (project.prix_achat_ttc > 0) {
+      const renovationRatio = project.travaux_ttc / project.prix_achat_ttc;
+      if (renovationRatio > 0.5) renovationRisk = 0.9;       // Heavy renovation
+      else if (renovationRatio > 0.3) renovationRisk = 0.95; // Moderate renovation
+    }
+    
+    const tri_adjusted = tri_base * deptRisk * renovationRisk;
+    return Math.max(0, Math.min(1, tri_adjusted));
+  },
 
-// Function to calculate dynamic margin
-const calculateMarge = (project) => {
-  return project.prix_vente_ttc - project.prix_achat_ttc - project.travaux_ttc - project.frais_agence_ttc;
+  calculateMarge: (project) => {
+    return project.prix_vente_ttc - project.prix_achat_ttc - project.travaux_ttc - project.frais_agence_ttc;
+  },
+
+  calculateMarketIndicators: (project) => {
+    const dept = project.address?.dept || '75';
+    const prixAchat = project.prix_achat_ttc || 0;
+    const prixVente = project.prix_vente_ttc || 0;
+    
+    // Estimated surface based on department
+    let estimatedSurface = 0;
+    if (['75', '92'].includes(dept)) {
+      estimatedSurface = prixAchat / 10000; // ~10k€/m² for Paris area
+    } else {
+      estimatedSurface = prixAchat / 6000;  // ~6k€/m² for other areas
+    }
+    
+    return {
+      estimatedSurface: Math.round(estimatedSurface * 10) / 10,
+      prixM2Achat: estimatedSurface > 0 ? Math.round(prixAchat / estimatedSurface) : 0,
+      prixM2Vente: estimatedSurface > 0 ? Math.round(prixVente / estimatedSurface) : 0,
+      plusValueM2: estimatedSurface > 0 ? Math.round((prixVente - prixAchat) / estimatedSurface) : 0,
+      liquidityScore: this.calculateLiquidityScore(dept, prixAchat)
+    };
+  },
+
+  calculateLiquidityScore: (dept, prix) => {
+    const baseScores = {
+      '75': 8, '92': 7, '93': 5, '94': 6, '95': 6
+    };
+    let score = baseScores[dept] || 5;
+    
+    // Price range adjustments
+    if (prix > 1500000) score -= 2;        // Luxury market
+    else if (prix < 200000) score -= 1;    // Very low end
+    else if (prix >= 300000 && prix <= 800000) score += 1; // Sweet spot
+    
+    return Math.max(1, Math.min(10, score));
+  }
 };
 
 // Mock projects data with dynamic calculations
