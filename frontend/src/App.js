@@ -1141,16 +1141,14 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
   };
 
   const handleClick = (e, project) => {
-    // Always prevent click if any drag operation occurred
-    if (draggedProjectId !== null) {
-      setDraggedProjectId(null);
-      setMouseDownPos(null);
-      return;
+    // Simple approach: only open if no drag occurred
+    if (!draggedProjectId) {
+      onProjectSelect(project);
     }
-
-    // This is a legitimate click
+    
+    // Reset drag state
+    setDraggedProjectId(null);
     setMouseDownPos(null);
-    onProjectSelect(project);
   };
 
   const handleDragOver = (e) => {
