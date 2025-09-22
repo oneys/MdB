@@ -1362,7 +1362,7 @@ async def update_project(
 async def update_project_status(
     project_id: str,
     status_update: dict,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_auth)
 ):
     """Update project status (for drag & drop)"""
     new_status = status_update.get("status")
@@ -1375,7 +1375,7 @@ async def update_project_status(
     # Check permissions
     if (existing_project["owner_id"] != current_user.id and 
         current_user.id not in existing_project.get("team_members", []) and
-        current_user.role not in ["OWNER", "PM"]):
+        current_user.role not in [UserRole.OWNER, UserRole.PM]):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Add event
