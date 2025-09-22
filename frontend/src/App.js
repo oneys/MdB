@@ -2291,67 +2291,34 @@ const FicheProjet = ({ project, onBack, onProjectUpdate }) => {
 
       {activeProjectTab === 'journal' && (
         <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Journal d'événements
-          </CardTitle>
-          <CardDescription>Historique complet des modifications</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[
-              {
-                id: 1,
-                type: "status_change",
-                description: "Statut changé de OFFRE vers COMPROMIS",
-                user: "Jean Dupont",
-                timestamp: "2025-01-20T14:30:00Z",
-                icon: <ArrowRight className="h-4 w-4 text-blue-500" />
-              },
-              {
-                id: 2,
-                type: "budget_update", 
-                description: "Budget travaux mis à jour: 80 000€ → 92 000€",
-                user: "Marie Martin",
-                timestamp: "2025-01-19T09:15:00Z",
-                icon: <Euro className="h-4 w-4 text-amber-500" />
-              },
-              {
-                id: 3,
-                type: "document_upload",
-                description: "Document ajouté: Compromis_signé.pdf",
-                user: "Jean Dupont", 
-                timestamp: "2025-01-18T16:45:00Z",
-                icon: <Upload className="h-4 w-4 text-green-500" />
-              },
-              {
-                id: 4,
-                type: "project_created",
-                description: "Projet créé",
-                user: "Jean Dupont",
-                timestamp: "2025-01-15T10:00:00Z",
-                icon: <Plus className="h-4 w-4 text-slate-500" />
-              }
-            ].map((event) => (
-              <div key={event.id} className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg">
-                <div className="flex-shrink-0 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
-                  {event.icon}
-                </div>
-                <div className="flex-grow">
-                  <p className="text-sm font-medium text-slate-900">{event.description}</p>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
-                    <User className="h-3 w-3" />
-                    <span>{event.user}</span>
-                    <span>•</span>
-                    <span>{new Date(event.timestamp).toLocaleDateString('fr-FR')} à {new Date(event.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Journal d'événements
+            </CardTitle>
+            <CardDescription>Historique complet des modifications</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {projectEvents.map((event) => (
+                <div key={event.id} className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg">
+                  <div className="flex-shrink-0 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
+                    {event.icon}
+                  </div>
+                  <div className="flex-grow">
+                    <p className="text-sm font-medium text-slate-900">{event.description}</p>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                      <User className="h-3 w-3" />
+                      <span>{event.user}</span>
+                      <span>•</span>
+                      <span>{new Date(event.timestamp).toLocaleDateString('fr-FR')} à {new Date(event.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Actions */}
