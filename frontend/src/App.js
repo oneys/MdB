@@ -212,7 +212,7 @@ const LoginPage = () => {
       }
     } catch (error) {
       console.error('Dev session error:', error);
-      alert('Session de développement échouée. Vérifiez les logs backend.');
+      console.error('Session de développement échouée. Vérifiez les logs backend.');
     }
   };
 
