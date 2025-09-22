@@ -1208,6 +1208,10 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
     // Notify parent component to update global state
     onProjectUpdate(updatedProject);
     
+    // Reset drag state
+    setDraggedProjectId(null);
+    setMouseDownPos(null);
+    
     console.log(`📝 Projet "${draggedProject.label}" déplacé de ${draggedProject.status} vers ${newStatus}`);
   };
 
