@@ -1,6 +1,9 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import "./App.css";
 import axios from "axios";
+import HomePage from './pages/HomePage';
+import PricingPage from './pages/PricingPage';
+import ContactPage from './pages/ContactPage';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
