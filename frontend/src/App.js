@@ -2909,6 +2909,7 @@ const MainApp = () => {
                 projects={projects} 
                 onProjectSelect={handleProjectSelect}
                 onProjectUpdate={handleProjectUpdate}
+                onProjectStatusUpdate={handleProjectStatusUpdate}
                 onProjectCreate={handleProjectCreate}
               />
             )}
