@@ -42,8 +42,73 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 fs = AsyncIOMotorGridFSBucket(db)
 
-# Create the main app without a prefix
-app = FastAPI(title="Marchands de Biens API", version="1.0.0")
+# Error handling classes
+class BusinessLogicError(Exception):
+    def __init__(self, message: str, error_code: str = "BUSINESS_ERROR"):
+        self.message = message
+        self.error_code = error_code
+        super().__init__(self.message)
+
+class ValidationError(Exception):
+    def __init__(self, message: str, field: str = None):
+        self.message = message
+        self.field = field
+        super().__init__(self.message)
+
+# Error handling middleware
+class ErrorHandlingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        try:
+            response = await call_next(request)
+            return response
+        except BusinessLogicError as e:
+            logging.error(f"Business logic error: {e.message}")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": "business_logic_error",
+                    "message": e.message,
+                    "error_code": e.error_code,
+                    "timestamp": datetime.now().isoformat(),
+                    "path": str(request.url.path)
+                }
+            )
+        except ValidationError as e:
+            logging.error(f"Validation error: {e.message} (field: {e.field})")
+            return JSONResponse(
+                status_code=422,
+                content={
+                    "error": "validation_error",
+                    "message": e.message,
+                    "field": e.field,
+                    "timestamp": datetime.now().isoformat(),
+                    "path": str(request.url.path)
+                }
+            )
+        except HTTPException as e:
+            # Let FastAPI handle HTTP exceptions normally
+            raise e
+        except Exception as e:
+            # Catch all other exceptions
+            error_id = str(uuid.uuid4())
+            logging.error(f"Unexpected error {error_id}: {str(e)}\n{traceback.format_exc()}")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "error": "internal_server_error",
+                    "message": "Une erreur inattendue s'est produite",
+                    "error_id": error_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "path": str(request.url.path)
+                }
+            )
+
+# FastAPI setup
+app = FastAPI(
+    title="MarchndsBiens API", 
+    version="1.0.0",
+    description="API complète pour marchands de biens immobiliers"
+)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
