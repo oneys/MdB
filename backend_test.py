@@ -16,22 +16,39 @@ class TaxCalculationAPITester:
         self.session_token = None
         self.test_project_id = None
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, validate_response=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, validate_response=None, files=None, form_data=None):
         """Run a single API test with optional response validation"""
         url = f"{self.api_url}/{endpoint}"
-        headers = {'Content-Type': 'application/json'}
+        headers = {}
+        
+        # Add session cookie if available
+        cookies = {}
+        if self.session_token:
+            cookies['session_token'] = self.session_token
+        
+        # Set headers based on request type
+        if files or form_data:
+            # Don't set Content-Type for multipart/form-data - requests will set it
+            pass
+        else:
+            headers['Content-Type'] = 'application/json'
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
         print(f"   URL: {url}")
-        if data:
+        if data and not files:
             print(f"   Data: {json.dumps(data, indent=2)}")
         
         try:
             if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=headers, cookies=cookies, timeout=10)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=10)
+                if files:
+                    response = requests.post(url, files=files, data=form_data, headers=headers, cookies=cookies, timeout=10)
+                else:
+                    response = requests.post(url, json=data, headers=headers, cookies=cookies, timeout=10)
+            elif method == 'PATCH':
+                response = requests.patch(url, json=data, headers=headers, cookies=cookies, timeout=10)
 
             success = response.status_code == expected_status
             response_data = {}
