@@ -1972,10 +1972,10 @@ const DataroomPanel = ({ project }) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="JURIDIQUE">Juridique</SelectItem>
-                  <SelectItem value="TECHNIQUE">Technique</SelectItem>
-                  <SelectItem value="FINANCIER">Financier</SelectItem>
-                  <SelectItem value="ADMINISTRATIF">Administratif</SelectItem>
+                  <SelectItem value="JURIDIQUE">📋 Juridique</SelectItem>
+                  <SelectItem value="TECHNIQUE">🔧 Technique</SelectItem>
+                  <SelectItem value="FINANCIER">💰 Financier</SelectItem>
+                  <SelectItem value="ADMINISTRATIF">📄 Administratif</SelectItem>
                 </SelectContent>
               </Select>
             </div>
