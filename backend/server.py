@@ -1768,8 +1768,8 @@ async def export_bank_dossier(
     
     documents = project.get('documents', [])
     if documents:
-        for doc in documents:
-            story.append(Paragraph(f"• {doc.get('filename', 'N/A')} ({doc.get('category', 'N/A')})", styles['Normal']))
+        for document in documents:
+            story.append(Paragraph(f"• {document.get('filename', 'N/A')} ({document.get('category', 'N/A')})", styles['Normal']))
     else:
         story.append(Paragraph("Aucun document fourni", styles['Normal']))
     
