@@ -1082,6 +1082,8 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
   const [localProjects, setLocalProjects] = useState(projects);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [draggedProjectId, setDraggedProjectId] = useState(null);
+  const [mouseDownPos, setMouseDownPos] = useState(null);
 
   // Sync with parent projects when they change
   React.useEffect(() => {
@@ -1108,8 +1110,6 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
   };
 
   const accessibleProjects = getAccessibleProjects();
-
-  const [isDragging, setIsDragging] = useState(false);
 
   const handleDragStart = (e, projectId) => {
     // Only allow drag if user has write access
