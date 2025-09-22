@@ -386,8 +386,9 @@ test_plan:
     - "Dynamic TRI calculations - VERIFIED ✅"
     - "Estimateur functionality - VERIFIED ✅"
     - "Dashboard and navigation - VERIFIED ✅"
-  stuck_tasks:
-    - "Drag & drop functionality in Kanban pipeline"
+    - "Drag & drop functionality - PHASE 2 VERIFIED ✅"
+    - "Document management accessibility - PHASE 2 VERIFIED ✅"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
