@@ -1305,6 +1305,144 @@ async def create_project(
     
     return project
 
+@api_router.post("/projects", response_model=ProjectResponse)
+async def create_project(
+    project: ProjectCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new project"""
+    if current_user.role not in ["OWNER", "PM"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Create new project
+    new_project = {
+        "id": str(uuid.uuid4()),
+        "label": project.label,
+        "address": project.address.dict(),
+        "status": "DETECTE",
+        "regime_tva": project.regime_tva,
+        "prix_achat_ttc": project.prix_achat_ttc,
+        "prix_vente_ttc": project.prix_vente_ttc,
+        "travaux_ttc": project.travaux_ttc,
+        "frais_agence_ttc": project.frais_agence_ttc,
+        "marge_estimee": project.prix_vente_ttc - project.prix_achat_ttc - project.travaux_ttc - project.frais_agence_ttc,
+        "tri_estime": 0.15,
+        "owner_id": current_user.id,
+        "team_members": [],
+        "documents": [],
+        "tasks": [],
+        "events": [
+            {
+                "id": str(uuid.uuid4()),
+                "type": "project_created",
+                "description": "Projet créé",
+                "user": current_user.name,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        ],
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    result = await db.projects.insert_one(new_project)
+    new_project["_id"] = str(result.inserted_id)
+    
+    return ProjectResponse(**new_project)
+
+@api_router.patch("/projects/{project_id}")
+async def update_project(
+    project_id: str,
+    project: ProjectUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update project details"""
+    # Check if project exists and user has access
+    existing_project = await db.projects.find_one({"id": project_id})
+    if not existing_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check permissions
+    if (existing_project["owner_id"] != current_user.id and 
+        current_user.id not in existing_project.get("team_members", []) and
+        current_user.role not in ["OWNER"]):
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Update project
+    update_data = project.dict(exclude_unset=True)
+    if "prix_achat_ttc" in update_data or "prix_vente_ttc" in update_data or "travaux_ttc" in update_data or "frais_agence_ttc" in update_data:
+        # Recalculate margin
+        update_data["marge_estimee"] = (
+            update_data.get("prix_vente_ttc", existing_project["prix_vente_ttc"]) - 
+            update_data.get("prix_achat_ttc", existing_project["prix_achat_ttc"]) -
+            update_data.get("travaux_ttc", existing_project["travaux_ttc"]) -
+            update_data.get("frais_agence_ttc", existing_project["frais_agence_ttc"])
+        )
+    
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    # Add event
+    event = {
+        "id": str(uuid.uuid4()),
+        "type": "project_update",
+        "description": f"Projet modifié : {update_data.get('label', existing_project['label'])}",
+        "user": current_user.name,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {
+            "$set": update_data,
+            "$push": {"events": event}
+        }
+    )
+    
+    updated_project = await db.projects.find_one({"id": project_id})
+    return ProjectResponse(**updated_project)
+
+@api_router.patch("/projects/{project_id}/status")
+async def update_project_status(
+    project_id: str,
+    status_update: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update project status (for drag & drop)"""
+    new_status = status_update.get("status")
+    
+    # Check if project exists
+    existing_project = await db.projects.find_one({"id": project_id})
+    if not existing_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check permissions
+    if (existing_project["owner_id"] != current_user.id and 
+        current_user.id not in existing_project.get("team_members", []) and
+        current_user.role not in ["OWNER", "PM"]):
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Add event
+    event = {
+        "id": str(uuid.uuid4()),
+        "type": "status_change",
+        "description": f"Statut changé de {existing_project['status']} vers {new_status}",
+        "user": current_user.name,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {
+            "$set": {
+                "status": new_status,
+                "updated_at": datetime.now(timezone.utc)
+            },
+            "$push": {"events": event}
+        }
+    )
+    
+    updated_project = await db.projects.find_one({"id": project_id})
+    return ProjectResponse(**updated_project)
+
 # Continue with remaining endpoints (tasks, budget, files, events, PDF exports)
 # [Previous implementation remains unchanged]
 
