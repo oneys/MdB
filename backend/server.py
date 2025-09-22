@@ -1245,11 +1245,11 @@ async def check_project_access(project_id: str, user: User, required_permission:
 
 # Projects API endpoints
 @api_router.get("/projects", response_model=List[ProjectResponse])
-async def get_projects(current_user: User = Depends(get_current_user)):
+async def get_projects(current_user: User = Depends(require_auth)):
     """Get projects based on user role"""
-    if current_user.role == "OWNER":
+    if current_user.role == UserRole.OWNER:
         projects = await db.projects.find().to_list(length=None)
-    elif current_user.role in ["PM", "ANALYSTE"]:
+    elif current_user.role in [UserRole.PM, UserRole.ANALYSTE]:
         projects = await db.projects.find({
             "$or": [
                 {"owner_id": current_user.id},
