@@ -240,8 +240,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Authentification OAuth Google pour tests UI complets"
-    - "Barèmes JSON versionnés (amélioration future)"
+    - "Tests drag & drop persistance Pipeline (fonctionnalité avancée)"
+    - "Tests modification projets avec sauvegarde"
+    - "Tests tâches interactives et journal dynamique"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
