@@ -1401,6 +1401,159 @@ async def update_project_status(
     updated_project = await db.projects.find_one({"id": project_id})
     return ProjectResponse(**updated_project)
 
+# Documents API endpoints
+@api_router.post("/projects/{project_id}/documents")
+async def upload_document(
+    project_id: str,
+    file: UploadFile = File(...),
+    category: str = Form(...),
+    current_user: User = Depends(require_auth)
+):
+    """Upload document to project"""
+    await check_project_access(project_id, current_user, "write")
+    
+    # Validate file size (50MB max)
+    if file.size > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File too large (max 50MB)")
+    
+    # Validate file type
+    allowed_types = {
+        'application/pdf': '.pdf',
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'application/msword': '.doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+        'application/vnd.ms-excel': '.xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx'
+    }
+    
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="File type not allowed")
+    
+    # Create upload directory
+    upload_dir = Path("uploads") / project_id
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    file_id = str(uuid.uuid4())
+    file_extension = allowed_types.get(file.content_type, Path(file.filename).suffix)
+    safe_filename = f"{file_id}{file_extension}"
+    file_path = upload_dir / safe_filename
+    
+    # Save file
+    content = await file.read()
+    with open(file_path, "wb") as buffer:
+        buffer.write(content)
+    
+    # Create document record
+    document = {
+        "id": file_id,
+        "filename": file.filename,
+        "safe_filename": safe_filename,
+        "category": category,
+        "file_path": str(file_path),
+        "size": len(content),
+        "content_type": file.content_type,
+        "uploaded_by": current_user.id,
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Add to project
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"documents": document}}
+    )
+    
+    # Add event
+    event = {
+        "id": str(uuid.uuid4()),
+        "type": "document_upload",
+        "description": f"Document ajouté: {file.filename}",
+        "user": current_user.name,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"events": event}}
+    )
+    
+    logging.info(f"Document uploaded: {file.filename} by {current_user.name}")
+    return {"message": "Document uploaded successfully", "document": document}
+
+@api_router.get("/projects/{project_id}/documents/{document_id}/download")
+async def download_document(
+    project_id: str,
+    document_id: str,
+    current_user: User = Depends(require_auth)
+):
+    """Download document from project"""
+    await check_project_access(project_id, current_user, "read")
+    
+    # Find project and document
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    document = next((doc for doc in project.get("documents", []) if doc["id"] == document_id), None)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    file_path = Path(document["file_path"])
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    
+    return StreamingResponse(
+        open(file_path, "rb"),
+        media_type=document["content_type"],
+        headers={"Content-Disposition": f"attachment; filename={document['filename']}"}
+    )
+
+@api_router.delete("/projects/{project_id}/documents/{document_id}")
+async def delete_document(
+    project_id: str,
+    document_id: str,
+    current_user: User = Depends(require_auth)
+):
+    """Delete document from project"""
+    await check_project_access(project_id, current_user, "write")
+    
+    # Find project and document
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    document = next((doc for doc in project.get("documents", []) if doc["id"] == document_id), None)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Delete file from disk
+    file_path = Path(document["file_path"])
+    if file_path.exists():
+        file_path.unlink()
+    
+    # Remove from project
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$pull": {"documents": {"id": document_id}}}
+    )
+    
+    # Add event
+    event = {
+        "id": str(uuid.uuid4()),
+        "type": "document_delete",
+        "description": f"Document supprimé: {document['filename']}",
+        "user": current_user.name,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"events": event}}
+    )
+    
+    return {"message": "Document deleted successfully"}
+
 # Continue with remaining endpoints (tasks, budget, files, events, PDF exports)
 # [Previous implementation remains unchanged]
 
