@@ -372,14 +372,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "White screen error fix - FIXED ✅"
-    - "Frontend comprehensive testing after white screen fix"
+    - "White screen error fix - VERIFIED ✅"
+    - "Project creation and management - VERIFIED ✅"
+    - "Dynamic TRI calculations - VERIFIED ✅"
+    - "Estimateur functionality - VERIFIED ✅"
+    - "Dashboard and navigation - VERIFIED ✅"
+  stuck_tasks:
     - "Drag & drop functionality in Kanban pipeline"
-    - "Document upload/download functionality verification"
-    - "Dynamic calculations verification"
-  stuck_tasks: []
-  test_all: true
-  test_priority: "critical_first"
+  test_all: false
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
