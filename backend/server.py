@@ -1257,13 +1257,21 @@ async def require_auth(session_token: Optional[str] = Cookie(None, alias="sessio
     
     return User(**user_data)
 
-async def check_project_access(project_id: str, user: User, required_permission: str = "read"):
-    accessible_projects = await get_accessible_projects(user)
-    if project_id not in accessible_projects:
-        raise HTTPException(status_code=403, detail="Access denied to this project")
+async def check_project_access(project_id: str, user: User, access_type: str = "read"):
+    """Check if user has access to project"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
     
-    if required_permission == "write" and user.role == UserRole.INVITE:
-        raise HTTPException(status_code=403, detail="Read-only access")
+    # Check access based on user role and project ownership
+    if user.role == "OWNER":
+        return True  # Owner has access to all projects
+    elif project["owner_id"] == user.id:
+        return True  # Project owner has full access
+    elif user.id in project.get("team_members", []):
+        return access_type == "read"  # Team members have read access only
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
 
 # Projects API endpoints
 @api_router.get("/projects", response_model=List[ProjectResponse])
