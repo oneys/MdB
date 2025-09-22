@@ -2816,6 +2816,49 @@ const MainApp = () => {
     }
   };
 
+  const handleProjectStatusUpdate = async (projectId, newStatus) => {
+    try {
+      // Update local state immediately
+      setProjects(prev => prev.map(p => 
+        p.id === projectId 
+          ? { ...p, status: newStatus, updated_at: new Date().toISOString() }
+          : p
+      ));
+
+      // Make API call to persist status change
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          status: newStatus
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update project status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(`✅ Statut du projet mis à jour: ${newStatus}`);
+      
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
+      // Revert the local state change on error
+      setProjects(prev => prev.map(p => {
+        if (p.id === projectId) {
+          // Find original status by checking current mockProjects or make another API call
+          const originalProject = prev.find(proj => proj.id === projectId);
+          return originalProject || p;
+        }
+        return p;
+      }));
+      alert('Erreur lors de la sauvegarde du statut. Veuillez réessayer.');
+    }
+  };
+
   const handleProjectCreate = (newProject) => {
     setProjects(prev => [...prev, newProject]);
   };
