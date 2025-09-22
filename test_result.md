@@ -288,9 +288,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Tests drag & drop persistance Pipeline (fonctionnalité avancée)"
-    - "Tests modification projets avec sauvegarde"
-    - "Tests tâches interactives et journal dynamique"
+    - "Upload documents - COMPLÉTÉ ✅"
+    - "Téléchargement documents - COMPLÉTÉ ✅"
+    - "Export PDF dossiers - COMPLÉTÉ ✅"
+    - "Calculs dynamiques - COMPLÉTÉ ✅"
+    - "APIs projets CRUD - COMPLÉTÉ ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
