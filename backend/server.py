@@ -1,10 +1,9 @@
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form, Depends, Cookie, Response, Request
-from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.security import HTTPBearer
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
-from pymongo import ASCENDING, DESCENDING
+from pymongo import DESCENDING
 import os
 import logging
 from pathlib import Path
@@ -16,10 +15,8 @@ from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
 import io
 import json
-import hashlib
-import secrets
 import aiohttp
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -757,7 +754,7 @@ class TaxCalculationService:
         else:
             tri = 0.0
         
-        marge_explain = f"\n4. CALCUL MARGES:\n"
+        marge_explain = "\n4. CALCUL MARGES:\n"
         marge_explain += f"Coûts acquisition: {total_couts_acquisition:,.2f} €\n"
         marge_explain += f"Coûts totaux: {total_couts:,.2f} €\n"
         marge_explain += f"Marge brute: {inputs.prix_vente_ttc:,.2f} € - {total_couts:,.2f} € = {marge_brute:,.2f} €\n"
@@ -772,7 +769,7 @@ class TaxCalculationService:
             warnings.append("⚠️ TVA sur marge sans statut MdB → Vérifier conditions art. 268 CGI")
         
         if warnings:
-            explains.append(f"\n5. ALERTES:\n" + "\n".join(warnings))
+            explains.append("\n5. ALERTES:\n" + "\n".join(warnings))
         
         return EstimateOutput(
             dmto=dmto, emoluments=emoluments, csi=csi, debours=debours,
