@@ -1897,10 +1897,10 @@ async def get_project_estimate(project):
             prix_vente_ttc=project.get('prix_vente_ttc', 0),
             travaux_ttc=project.get('travaux_ttc', 0),
             frais_agence_ttc=project.get('frais_agence_ttc', 0),
-            hypotheses=EstimateHypotheses(
-                md_b_0715_ok=project.get('flags', {}).get('md_b_0715_ok', False),
-                travaux_structurants=project.get('flags', {}).get('travaux_structurants', False)
-            )
+            hypotheses={
+                'md_b_0715_ok': project.get('flags', {}).get('md_b_0715_ok', False),
+                'travaux_structurants': project.get('flags', {}).get('travaux_structurants', False)
+            }
         )
         
         # Calculate estimate
