@@ -2848,6 +2848,33 @@ const MainApp = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Load projects from API on component mount
+  React.useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/projects`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const apiProjects = await response.json();
+          setProjects(apiProjects);
+          console.log(`✅ ${apiProjects.length} projets chargés depuis l'API`);
+        } else {
+          console.log('⚠️ Échec du chargement des projets depuis l\'API, utilisation des données mockées');
+          setProjects(mockProjects);
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des projets:', error);
+        setProjects(mockProjects);  // Fallback to mock data
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
     setActiveTab("project");
