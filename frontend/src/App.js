@@ -1912,6 +1912,37 @@ const DataroomPanel = ({ project }) => {
     }
   };
 
+  const exportPDF = async (type) => {
+    try {
+      setUploading(true); // Use uploading state for export feedback
+      
+      const response = await axios.get(
+        `${API}/projects/${project.id}/export/${type}`,
+        {
+          withCredentials: true,
+          responseType: 'blob'
+        }
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(new window.Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `dossier_${type}_${project.label.replace(/\s+/g, '_')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      console.log(`✅ Export ${type} réussi`);
+    } catch (error) {
+      console.error('Export error:', error);
+      console.error(`Erreur lors de l'export ${type}: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const getCategoryColor = (type) => {
     switch (type) {
       case 'JURIDIQUE': return 'bg-blue-100 text-blue-700 border-blue-300';
