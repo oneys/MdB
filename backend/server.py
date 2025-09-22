@@ -1276,7 +1276,7 @@ async def create_project(
     new_project = {
         "id": str(uuid.uuid4()),
         "label": project.label,
-        "address": project.address.dict(),
+        "address": project.address,
         "status": "DETECTE",
         "regime_tva": project.regime_tva,
         "prix_achat_ttc": project.prix_achat_ttc,
