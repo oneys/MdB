@@ -1138,30 +1138,15 @@ const Pipeline = ({ projects, onProjectSelect, onProjectUpdate, onProjectCreate 
   };
 
   const handleClick = (e, project) => {
-    // Check if this was a drag operation
-    if (draggedProjectId === project.id) {
-      // This was a drag, don't open the project
+    // Always prevent click if any drag operation occurred
+    if (draggedProjectId !== null) {
       setDraggedProjectId(null);
+      setMouseDownPos(null);
       return;
-    }
-
-    // Check if mouse moved significantly (indicating drag attempt)
-    if (mouseDownPos) {
-      const distance = Math.sqrt(
-        Math.pow(e.clientX - mouseDownPos.x, 2) + 
-        Math.pow(e.clientY - mouseDownPos.y, 2)
-      );
-      
-      // If mouse moved more than 5 pixels, consider it a drag attempt
-      if (distance > 5) {
-        setMouseDownPos(null);
-        return;
-      }
     }
 
     // This is a legitimate click
     setMouseDownPos(null);
-    setDraggedProjectId(null);
     onProjectSelect(project);
   };
 
