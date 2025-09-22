@@ -32,11 +32,48 @@ import aiohttp
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-fs = AsyncIOMotorGridFSBucket(db)
+# Initialize database connection
+try:
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.environ.get('DB_NAME', 'test_database')]
+    fs = AsyncIOMotorGridFSBucket(db)
+    logging.info(f"Successfully connected to MongoDB: {mongo_url}")
+except Exception as e:
+    logging.error(f"Failed to connect to MongoDB: {e}")
+    raise
+
+# Database optimization functions
+async def create_database_indexes():
+    """Create database indexes for performance optimization"""
+    try:
+        # Projects collection indexes
+        await db.projects.create_index([("owner_id", 1), ("status", 1)], background=True)
+        await db.projects.create_index([("created_at", -1)], background=True)
+        await db.projects.create_index([("updated_at", -1)], background=True)
+        await db.projects.create_index([("address.dept", 1)], background=True)
+        await db.projects.create_index([("regime_tva", 1)], background=True)
+        
+        # Users collection indexes
+        await db.users.create_index("email", unique=True, background=True)
+        await db.users.create_index("id", unique=True, background=True)
+        await db.users.create_index([("created_at", -1)], background=True)
+        
+        # User sessions collection indexes
+        await db.user_sessions.create_index("session_token", unique=True, background=True)
+        await db.user_sessions.create_index("user_id", background=True)
+        await db.user_sessions.create_index("expires_at", background=True)
+        
+        # Estimates collection indexes (if you plan to store estimates)
+        await db.estimates.create_index([("project_id", 1), ("created_at", -1)], background=True)
+        
+        logging.info("Database indexes created successfully")
+    except Exception as e:
+        logging.error(f"Failed to create database indexes: {e}")
+
+# Call index creation on startup
+import asyncio
+asyncio.create_task(create_database_indexes())
 
 # Error handling classes
 class BusinessLogicError(Exception):
