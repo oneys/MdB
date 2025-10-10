@@ -55,7 +55,9 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
   const currentStatus = statusConfig[project.status] || statusConfig['DETECTE'];
 
   const openGoogleMaps = () => {
-    const encodedAddress = encodeURIComponent(`${project.address}, ${project.city || ''}, France`);
+    const address = typeof project.address === 'string' ? project.address : project.address?.line1;
+    const city = project.city || project.address?.city;
+    const encodedAddress = encodeURIComponent(`${address}, ${city || ''}, France`);
     window.open(`https://maps.google.com/?q=${encodedAddress}`, '_blank');
   };
 
