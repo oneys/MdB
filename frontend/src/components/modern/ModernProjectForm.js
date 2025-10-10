@@ -107,17 +107,27 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
       try {
         const newProject = {
           ...formData,
-          prix_achat_ttc: parseFloat(formData.prix_achat_ttc),
-          prix_vente_ttc: parseFloat(formData.prix_vente_ttc),
+          prix_achat_ttc: parseFloat(formData.prix_achat_ttc) || 0,
+          prix_vente_ttc: parseFloat(formData.prix_vente_ttc) || 0,
           travaux_ttc: parseFloat(formData.travaux_ttc) || 0,
           frais_agence_ttc: parseFloat(formData.frais_agence_ttc) || 0,
           status: 'DETECTE',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          // Convert address object format to string for compatibility
+          address: formData.address
         };
         
-        onProjectCreate && onProjectCreate(newProject);
+        console.log('💾 Création du projet:', newProject);
+        
+        if (onProjectCreate) {
+          await onProjectCreate(newProject);
+          alert('✅ Projet créé avec succès !');
+        } else {
+          console.error('❌ onProjectCreate function not provided');
+        }
       } catch (error) {
-        console.error('Erreur lors de la création:', error);
+        console.error('❌ Erreur lors de la création:', error);
+        alert('❌ Erreur lors de la création du projet');
       }
     }
   };
