@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../AuthContext';
 import ModernHomePage from '../../pages/ModernHomePage';
 import ModernSidebar from './ModernSidebar';
 import ModernDashboard from './ModernDashboard';
@@ -7,8 +6,7 @@ import ModernProjectDetail from './ModernProjectDetail';
 import ModernProjectForm from './ModernProjectForm';
 import { Palette, ArrowLeft } from 'lucide-react';
 
-const ModernApp = ({ onSwitchToClassic }) => {
-  const { user, logout } = useAuth();
+const ModernApp = ({ onSwitchToClassic, user, logout }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
