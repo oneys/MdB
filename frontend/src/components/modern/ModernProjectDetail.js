@@ -13,7 +13,9 @@ import {
   ExternalLink,
   Target,
   Building,
-  Percent
+  Percent,
+  Trash2,
+  Settings
 } from 'lucide-react';
 
 const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate, onProjectDelete }) => {
