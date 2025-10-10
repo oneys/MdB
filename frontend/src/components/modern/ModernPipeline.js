@@ -7,7 +7,9 @@ import {
   TrendingUp,
   Filter,
   Search,
-  ArrowUpRight
+  ArrowUpRight,
+  Edit,
+  Trash2
 } from 'lucide-react';
 
 const ModernPipeline = ({ projects, onProjectSelect, onProjectStatusUpdate, onProjectCreate, onProjectUpdate, onProjectDelete }) => {
