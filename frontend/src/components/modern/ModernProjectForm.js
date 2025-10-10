@@ -148,9 +148,58 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      // Handle file upload logic here
-      console.log('Files dropped:', e.dataTransfer.files);
+      handleFiles(e.dataTransfer.files);
     }
+  };
+
+  const handleFiles = (files) => {
+    const newPhotos = [];
+    
+    for (let i = 0; i < files.length && i < 10; i++) {
+      const file = files[i];
+      
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const photo = {
+            id: Date.now() + i,
+            name: file.name,
+            url: e.target.result,
+            file: file
+          };
+          newPhotos.push(photo);
+          
+          setFormData(prev => ({
+            ...prev,
+            photos: [...(prev.photos || []), photo]
+          }));
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    
+    console.log('📷 Images ajoutées:', files.length);
+  };
+
+  const handleFileSelect = (e) => {
+    e.preventDefault();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      if (e.target.files) {
+        handleFiles(e.target.files);
+      }
+    };
+    input.click();
+  };
+
+  const removePhoto = (photoId) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: (prev.photos || []).filter(photo => photo.id !== photoId)
+    }));
   };
 
   // Calculate estimated margin
