@@ -106,28 +106,68 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
     if (validateStep(currentStep)) {
       try {
         const newProject = {
-          ...formData,
+          label: formData.label,
+          address: formData.address,
+          city: formData.city,
+          dept: formData.dept,
           prix_achat_ttc: parseFloat(formData.prix_achat_ttc) || 0,
           prix_vente_ttc: parseFloat(formData.prix_vente_ttc) || 0,
           travaux_ttc: parseFloat(formData.travaux_ttc) || 0,
           frais_agence_ttc: parseFloat(formData.frais_agence_ttc) || 0,
+          regime_tva: formData.regime_tva,
           status: 'DETECTE',
-          created_at: new Date().toISOString(),
-          // Convert address object format to string for compatibility
-          address: formData.address
+          description: formData.description || '',
+          created_at: new Date().toISOString()
         };
         
         console.log('💾 Création du projet:', newProject);
         
         if (onProjectCreate) {
           await onProjectCreate(newProject);
-          alert('✅ Projet créé avec succès !');
+          
+          // Success notification
+          setCurrentStep(1); // Reset form
+          setFormData({
+            label: '',
+            address: '',
+            city: '',
+            dept: '',
+            prix_achat_ttc: '',
+            prix_vente_ttc: '',
+            travaux_ttc: '',
+            frais_agence_ttc: '',
+            regime_tva: 'MARGE',
+            description: '',
+            photos: []
+          });
+          
+          // Show success message
+          const notification = document.createElement('div');
+          notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg z-50';
+          notification.innerHTML = '✅ Projet créé avec succès !';
+          document.body.appendChild(notification);
+          
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 3000);
+          
         } else {
-          console.error('❌ onProjectCreate function not provided');
+          throw new Error('onProjectCreate function not provided');
         }
       } catch (error) {
         console.error('❌ Erreur lors de la création:', error);
-        alert('❌ Erreur lors de la création du projet');
+        
+        // Error notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-xl shadow-lg z-50';
+        notification.innerHTML = '❌ Erreur lors de la création du projet';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+          }
+        }, 3000);
       }
     }
   };
