@@ -265,8 +265,9 @@ const ModernApp = ({ onSwitchToClassic, user, logout }) => {
           <ModernProjectDetail
             project={selectedProject}
             onBack={handleBackFromProject}
-            onProjectUpdate={handleProjectUpdate}
+            onProjectUpdate={handleProjectEdit}
             onProjectStatusUpdate={handleProjectStatusUpdate}
+            onProjectDelete={handleProjectDelete}
           />
         )}
 
