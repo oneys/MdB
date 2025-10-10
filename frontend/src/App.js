@@ -2850,6 +2850,8 @@ const FicheProjet = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate }
 
 // Main App Component
 const MainApp = () => {
+  const { user, logout } = useAuth();
+  
   const [useModernUI, setUseModernUI] = useState(() => {
     return localStorage.getItem('useModernUI') === 'true';
   });
