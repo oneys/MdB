@@ -88,7 +88,10 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
               <h1 className="text-4xl font-bold text-white mb-2">{project.label}</h1>
               <div className="flex items-center text-white/90 text-lg">
                 <MapPin className="h-5 w-5 mr-2" />
-                {project.address}
+                {typeof project.address === 'string' 
+                  ? project.address 
+                  : project.address?.line1 || 'Adresse non renseignée'
+                }
               </div>
             </div>
             
