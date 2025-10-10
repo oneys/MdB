@@ -185,13 +185,58 @@ const ModernDashboard = ({ projects, onProjectSelect }) => {
             </div>
           </div>
 
-          {/* Simple Chart Placeholder */}
-          <div className="h-64 bg-gradient-to-br from-violet-50 to-blue-50 rounded-xl flex items-center justify-center border border-violet-100">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 text-violet-400 mx-auto mb-2" />
-              <p className="text-slate-600 text-sm">Graphique des marges</p>
-              <p className="text-slate-500 text-xs">Chart.js à implémenter</p>
-            </div>
+          {/* Revenue Chart */}
+          <div className="h-64 relative">
+            <svg className="w-full h-full" viewBox="0 0 400 200">
+              {/* Grid Lines */}
+              {[0, 1, 2, 3, 4].map(i => (
+                <line key={i} x1="0" y1={40 + i * 30} x2="380" y2={40 + i * 30} 
+                      stroke="#e2e8f0" strokeWidth="1" />
+              ))}
+              
+              {/* Gradient */}
+              <defs>
+                <linearGradient id="revenueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4"/>
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1"/>
+                </linearGradient>
+              </defs>
+              
+              {/* Chart Line */}
+              <path 
+                d="M40,160 Q90,140 140,120 T240,100 T340,80" 
+                fill="none" 
+                stroke="url(#lineGradient)" 
+                strokeWidth="3"
+              />
+              
+              {/* Fill Area */}
+              <path 
+                d="M40,160 Q90,140 140,120 T240,100 T340,80 L340,180 L40,180 Z" 
+                fill="url(#revenueGradient)"
+              />
+              
+              {/* Data Points */}
+              {[{x: 40, y: 160}, {x: 140, y: 120}, {x: 240, y: 100}, {x: 340, y: 80}].map((point, i) => (
+                <circle key={i} cx={point.x} cy={point.y} r="4" fill="#8b5cf6" />
+              ))}
+              
+              {/* Months Labels */}
+              <text x="40" y="195" textAnchor="middle" className="text-xs fill-slate-500">Nov</text>
+              <text x="140" y="195" textAnchor="middle" className="text-xs fill-slate-500">Jan</text>
+              <text x="240" y="195" textAnchor="middle" className="text-xs fill-slate-500">Mar</text>
+              <text x="340" y="195" textAnchor="middle" className="text-xs fill-slate-500">Oct</text>
+            </svg>
+            
+            {/* Gradient for line */}
+            <svg className="absolute inset-0 pointer-events-none">
+              <defs>
+                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8b5cf6"/>
+                  <stop offset="100%" stopColor="#3b82f6"/>
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
         </div>
 
