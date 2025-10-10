@@ -300,35 +300,42 @@ const ModernPipeline = ({ projects, onProjectSelect, onProjectStatusUpdate, onPr
         </div>
       </div>
 
-      {/* Stats Footer */}
-      <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
-          <div className="text-2xl font-bold text-slate-900">{filteredProjects.length}</div>
-          <div className="text-sm text-slate-600">Total projets</div>
-        </div>
-        
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
-          <div className="text-2xl font-bold text-green-600">{getProjectsByStatus('VENDU').length}</div>
-          <div className="text-sm text-slate-600">Vendus</div>
-        </div>
-        
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
-          <div className="text-2xl font-bold text-blue-600">
-            {getProjectsByStatus('SOUS_COMPROMIS').length + getProjectsByStatus('ACTE_SIGNE').length}
+      {/* Fixed Stats Footer */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-40">
+        <div className="max-w-7xl mx-auto px-8 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-slate-900">{filteredProjects.length}</div>
+              <div className="text-sm text-slate-600">Total projets</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{getProjectsByStatus('VENDU').length}</div>
+              <div className="text-sm text-slate-600">Vendus</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {getProjectsByStatus('SOUS_COMPROMIS').length + getProjectsByStatus('ACTE_SIGNE').length}
+              </div>
+              <div className="text-sm text-slate-600">En cours</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold text-violet-600">
+                {Math.round(filteredProjects.reduce((sum, p) => {
+                  const margin = (p.prix_vente_ttc || 0) - (p.prix_achat_ttc || 0) - (p.travaux_ttc || 0) - (p.frais_agence_ttc || 0);
+                  return sum + margin;
+                }, 0) / 1000)}k€
+              </div>
+              <div className="text-sm text-slate-600">Marge totale</div>
+            </div>
           </div>
-          <div className="text-sm text-slate-600">En cours</div>
-        </div>
-        
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
-          <div className="text-2xl font-bold text-violet-600">
-            {Math.round(filteredProjects.reduce((sum, p) => {
-              const margin = (p.prix_vente_ttc || 0) - (p.prix_achat_ttc || 0) - (p.travaux_ttc || 0) - (p.frais_agence_ttc || 0);
-              return sum + margin;
-            }, 0) / 1000)}k€
-          </div>
-          <div className="text-sm text-slate-600">Marge totale</div>
         </div>
       </div>
+      
+      {/* Spacer for fixed footer */}
+      <div className="h-20"></div>
     </div>
   );
 };
