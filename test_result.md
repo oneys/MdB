@@ -373,6 +373,43 @@ frontend:
         agent: "testing"
         comment: "❌ EVENT JOURNAL NOT ACCESSIBLE - Could not access project detail views with Journal/Events sections during testing. Navigation to individual project pages was not successful in current test session. Backend event/journal APIs are confirmed working from previous tests."
 
+  - task: "Google Maps integration in project forms"
+    implemented: true
+    working: "unknown"
+    file: "ModernProjectForm.js, ModernProjectEdit.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "Google Maps integration added to project creation (ModernProjectForm.js) and editing (ModernProjectEdit.js) forms. Allows users to link project addresses to maps. Needs validation for functionality and API key configuration."
+
+  - task: "Cost distribution pie chart"
+    implemented: true
+    working: "unknown"
+    file: "ModernProjectDetail.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "Pie chart added to ModernProjectDetail.js to visualize cost distribution (purchase price, renovation costs, notary fees, etc.). Needs visual validation and data accuracy verification."
+
+  - task: "Project creation form validation"
+    implemented: true
+    working: "unknown"
+    file: "ModernProjectForm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "ModernProjectForm.js updated to ensure correct API calls and validation. User previously reported creation failures. Needs end-to-end testing for creation flow and persistence."
+
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
