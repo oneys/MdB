@@ -1715,14 +1715,11 @@ async def update_project(
 
 @api_router.patch("/projects/{project_id}/status")
 async def update_project_status(
-    project_id: str,
-    status_update: dict,
-    current_user: User = Depends(require_auth)
+    project_id: str, 
+    status_data: ProjectStatusUpdate, 
+    current_user=Depends(get_current_user)
 ):
-    """Update project status (for drag & drop)"""
-    new_status = status_update.get("status")
-    
-    # Check if project exists
+    """Update project status with event logging"""
     existing_project = await db.projects.find_one({"id": project_id})
     if not existing_project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -1734,28 +1731,55 @@ async def update_project_status(
         current_user.role not in [UserRole.OWNER, UserRole.PM]):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
-    # Add event
-    event = {
+    old_status = existing_project.get("status", "DETECTE")
+    new_status = status_data.status
+    
+    # Add status change event
+    status_event = {
         "id": str(uuid.uuid4()),
         "type": "status_change",
-        "description": f"Statut changé de {existing_project['status']} vers {new_status}",
+        "description": f"Statut changé de {old_status} vers {new_status}",
         "user": current_user.name,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "details": {"old_status": old_status, "new_status": new_status}
     }
     
-    await db.projects.update_one(
-        {"id": project_id},
-        {
-            "$set": {
-                "status": new_status,
-                "updated_at": datetime.now(timezone.utc)
-            },
-            "$push": {"events": event}
-        }
-    )
+    # Update project
+    update_data = {
+        "status": new_status,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "$push": {"events": status_event}
+    }
     
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    
+    # Return updated project
     updated_project = await db.projects.find_one({"id": project_id})
     return ProjectResponse(**updated_project)
+
+@api_router.delete("/projects/{project_id}")
+async def delete_project(
+    project_id: str, 
+    current_user=Depends(get_current_user)
+):
+    """Delete a project"""
+    existing_project = await db.projects.find_one({"id": project_id})
+    if not existing_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check permissions (allow if owner_id is null for dev/test data)
+    if (existing_project.get("owner_id") is not None and
+        existing_project["owner_id"] != current_user.id and 
+        current_user.role not in [UserRole.OWNER]):
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Delete project
+    result = await db.projects.delete_one({"id": project_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    return {"message": "Project deleted successfully", "id": project_id}
 
 # Documents API endpoints
 @api_router.post("/projects/{project_id}/documents")
