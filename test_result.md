@@ -418,13 +418,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "White screen error fix - VERIFIED ✅"
-    - "Project creation and management - VERIFIED ✅"
-    - "Dynamic TRI calculations - VERIFIED ✅"
-    - "Estimateur functionality - VERIFIED ✅"
-    - "Dashboard and navigation - VERIFIED ✅"
-    - "Drag & drop functionality - PHASE 2 VERIFIED ✅"
-    - "Document management accessibility - PHASE 2 VERIFIED ✅"
+    - "Google Maps integration in project forms - NEEDS TESTING"
+    - "Cost distribution pie chart - NEEDS TESTING"
+    - "Project creation form validation - NEEDS TESTING"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
