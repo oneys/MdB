@@ -3008,10 +3008,8 @@ const MainApp = () => {
     );
   }
 
-  // Use modern UI if enabled
-  if (useModernUI) {
-    return <ModernApp onSwitchToClassic={handleSwitchToClassic} user={user} logout={logout} />;
-  }
+  // Always use modern UI - old interface removed
+  return <ModernApp onSwitchToClassic={handleSwitchToClassic} user={user} logout={logout} />;
 
   return (
     <div className="min-h-screen bg-slate-50">
