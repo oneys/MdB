@@ -4,6 +4,8 @@ import ModernSidebar from './ModernSidebar';
 import ModernDashboard from './ModernDashboard';
 import ModernProjectDetail from './ModernProjectDetail';
 import ModernProjectForm from './ModernProjectForm';
+import ModernPipeline from './ModernPipeline';
+import ModernEstimator from './ModernEstimator';
 import { Palette, ArrowLeft } from 'lucide-react';
 
 const ModernApp = ({ onSwitchToClassic, user, logout }) => {
