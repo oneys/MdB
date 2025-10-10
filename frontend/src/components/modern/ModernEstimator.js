@@ -346,16 +346,26 @@ const ModernEstimator = () => {
                     <span className="text-sm font-medium text-blue-900">DMTO</span>
                     <span className="font-bold text-blue-900">{formatEuro(results.dmto || 0)}</span>
                   </div>
-                  <div className="text-xs text-blue-700">
-                    Taux: {results.dmto_rate || 'N/A'}%
-                  </div>
                 </div>
 
                 {/* Frais de notaire */}
                 <div className="p-4 bg-amber-50 rounded-xl">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-sm font-medium text-amber-900">Frais notaire</span>
-                    <span className="font-bold text-amber-900">{formatEuro(results.notary_fees || 0)}</span>
+                    <span className="font-bold text-amber-900">
+                      {formatEuro((results.emoluments || 0) + (results.csi || 0) + (results.debours || 0))}
+                    </span>
+                  </div>
+                  <div className="text-xs text-amber-700">
+                    Émoluments: {formatEuro(results.emoluments || 0)}
+                  </div>
+                </div>
+
+                {/* TVA */}
+                <div className="p-4 bg-violet-50 rounded-xl">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium text-violet-900">TVA sur marge</span>
+                    <span className="font-bold text-violet-900">{formatEuro(results.tva_marge || 0)}</span>
                   </div>
                 </div>
 
@@ -363,22 +373,20 @@ const ModernEstimator = () => {
                 <div className="p-4 bg-green-50 rounded-xl">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-sm font-medium text-green-900">Marge nette</span>
-                    <span className="font-bold text-green-900">{formatEuro(results.net_margin || 0)}</span>
+                    <span className="font-bold text-green-900">{formatEuro(results.marge_nette || 0)}</span>
                   </div>
                   <div className="text-xs text-green-700">
-                    TRI estimé: {(results.tri_estimated || 0).toFixed(1)}%
+                    TRI estimé: {((results.tri || 0) * 100).toFixed(1)}%
                   </div>
                 </div>
 
-                {/* TVA */}
-                {results.tva_due && (
-                  <div className="p-4 bg-violet-50 rounded-xl">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium text-violet-900">TVA due</span>
-                      <span className="font-bold text-violet-900">{formatEuro(results.tva_due)}</span>
-                    </div>
+                {/* Marge brute */}
+                <div className="p-4 bg-slate-50 rounded-xl">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium text-slate-900">Marge brute</span>
+                    <span className="font-bold text-slate-900">{formatEuro(results.marge_brute || 0)}</span>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Explanation */}
