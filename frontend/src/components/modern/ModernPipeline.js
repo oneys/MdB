@@ -133,21 +133,72 @@ const ModernPipeline = ({ projects, onProjectSelect, onProjectStatusUpdate, onPr
     const margin = (project.prix_vente_ttc || 0) - (project.prix_achat_ttc || 0) - (project.travaux_ttc || 0) - (project.frais_agence_ttc || 0);
     const address = typeof project.address === 'string' ? project.address : project.address?.line1 || 'Adresse non renseignée';
 
+    const handleEdit = (e) => {
+      e.stopPropagation();
+      onProjectUpdate && onProjectUpdate(project);
+    };
+
+    const handleDelete = async (e) => {
+      e.stopPropagation();
+      
+      // Double confirmation
+      const firstConfirm = window.confirm(`Êtes-vous sûr de vouloir supprimer le projet "${project.label}" ?`);
+      if (firstConfirm) {
+        const secondConfirm = window.confirm(`ATTENTION : Cette action est irréversible ! Confirmez-vous la suppression définitive de "${project.label}" ?`);
+        if (secondConfirm) {
+          try {
+            await onProjectDelete(project.id);
+            
+            // Success notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg z-50';
+            notification.innerHTML = `✅ Projet "${project.label}" supprimé avec succès`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+              if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+              }
+            }, 3000);
+            
+          } catch (error) {
+            console.error('Erreur suppression:', error);
+            alert('❌ Erreur lors de la suppression');
+          }
+        }
+      }
+    };
+
     return (
       <div
         draggable
         onDragStart={(e) => handleDragStart(e, project)}
         onClick={() => onProjectSelect(project)}
-        className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+        className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group relative"
       >
+        {/* Action buttons */}
+        <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={handleEdit}
+            className="p-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            title="Modifier le projet"
+          >
+            <Edit className="h-3 w-3" />
+          </button>
+          <button
+            onClick={handleDelete}
+            className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            title="Supprimer le projet"
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </div>
+
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="font-semibold text-slate-900 text-sm leading-tight pr-2 group-hover:text-violet-600 transition-colors">
+        <div className="flex items-start justify-between mb-3 pr-16">
+          <h3 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-violet-600 transition-colors">
             {project.label}
           </h3>
-          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded transition-all">
-            <MoreVertical className="h-4 w-4 text-slate-400" />
-          </button>
         </div>
 
         {/* Address */}
