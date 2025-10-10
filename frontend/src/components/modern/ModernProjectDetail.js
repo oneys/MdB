@@ -86,15 +86,35 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header with Back Button */}
+      {/* Header with Back Button and Actions */}
       <div className="bg-white border-b border-slate-200 px-8 py-4">
-        <button
-          onClick={onBack}
-          className="flex items-center text-slate-600 hover:text-slate-900 transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Retour aux projets
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="flex items-center text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Retour aux projets
+          </button>
+          
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleEdit}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+            >
+              <Edit className="h-4 w-4" />
+              <span>Modifier</span>
+            </button>
+            
+            <button
+              onClick={handleDelete}
+              className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Supprimer</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Hero Banner with Project Image */}
