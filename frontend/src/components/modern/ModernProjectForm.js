@@ -347,7 +347,18 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Adresse *
+                    Adresse * 
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const address = `${formData.address}, ${formData.city}, France`;
+                        const url = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      📍 Voir sur Google Maps
+                    </button>
                   </label>
                   <input
                     type="text"
