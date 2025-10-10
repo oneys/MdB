@@ -223,6 +223,19 @@ const ModernApp = ({ onSwitchToClassic, user, logout }) => {
           />
         )}
 
+        {activeTab === "pipeline" && (
+          <ModernPipeline
+            projects={projects}
+            onProjectSelect={handleProjectSelect}
+            onProjectStatusUpdate={handleProjectStatusUpdate}
+            onProjectCreate={() => setActiveTab("project-form")}
+          />
+        )}
+
+        {activeTab === "estimator" && (
+          <ModernEstimator />
+        )}
+
         {activeTab === "project-detail" && selectedProject && (
           <ModernProjectDetail
             project={selectedProject}
@@ -239,23 +252,20 @@ const ModernApp = ({ onSwitchToClassic, user, logout }) => {
           />
         )}
 
-        {/* Placeholder for other tabs */}
-        {["pipeline", "dataroom", "estimator", "analytics", "calendar", "settings"].includes(activeTab) && (
+        {/* Placeholder for remaining tabs */}
+        {["dataroom", "analytics", "calendar", "settings"].includes(activeTab) && (
           <div className="p-8">
             <div className="bg-white rounded-2xl p-16 border border-slate-200 shadow-sm text-center">
               <Palette className="h-16 w-16 text-slate-300 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-slate-600 mb-2">
                 {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
               </h2>
-              <p className="text-slate-500">
-                Cette section est en cours de développement dans la nouvelle interface moderne.
+              <p className="text-slate-500 mb-4">
+                Cette section sera développée prochainement dans l'interface moderne.
               </p>
-              <button
-                onClick={onSwitchToClassic}
-                className="mt-4 px-6 py-3 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-colors"
-              >
-                Utiliser l'interface classique
-              </button>
+              <div className="text-sm text-slate-400">
+                Fonctionnalités prévues : gestion documentaire, analytics avancées, planification
+              </div>
             </div>
           </div>
         )}
