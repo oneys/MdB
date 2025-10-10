@@ -3006,8 +3006,25 @@ const MainApp = () => {
     );
   }
 
+  // Use modern UI if enabled
+  if (useModernUI) {
+    return <ModernApp onSwitchToClassic={handleSwitchToClassic} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Switch to Modern UI Button */}
+      <div className="absolute top-4 right-4 z-50">
+        <button
+          onClick={handleSwitchToModern}
+          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-blue-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+          title="Basculer vers la nouvelle interface moderne"
+        >
+          <Palette className="h-4 w-4" />
+          <span className="text-sm font-medium">Interface moderne</span>
+        </button>
+      </div>
+
       <Navigation 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
