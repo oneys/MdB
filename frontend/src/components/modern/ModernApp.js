@@ -252,6 +252,8 @@ const ModernApp = ({ onSwitchToClassic, user, logout }) => {
             onProjectSelect={handleProjectSelect}
             onProjectStatusUpdate={handleProjectStatusUpdate}
             onProjectCreate={() => setActiveTab("project-form")}
+            onProjectUpdate={handleProjectEdit}
+            onProjectDelete={handleProjectDelete}
           />
         )}
 
