@@ -252,8 +252,15 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
                     <div className="flex items-start space-x-3">
                       <MapPin className="h-5 w-5 text-violet-600 mt-0.5" />
                       <div>
-                        <p className="font-medium text-slate-900">{project.address}</p>
-                        <p className="text-slate-600">{project.city || ''}</p>
+                        <p className="font-medium text-slate-900">
+                          {typeof project.address === 'string' 
+                            ? project.address 
+                            : project.address?.line1 || 'Adresse non renseignée'
+                          }
+                        </p>
+                        <p className="text-slate-600">
+                          {project.city || project.address?.city || ''}
+                        </p>
                       </div>
                     </div>
                     
