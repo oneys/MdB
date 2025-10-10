@@ -540,7 +540,7 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
 
               {/* File Upload Area */}
               <div
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
                   dragActive 
                     ? 'border-violet-400 bg-violet-50' 
                     : 'border-slate-300 hover:border-violet-300 hover:bg-slate-50'
@@ -549,29 +549,64 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
+                onClick={handleFileSelect}
               >
                 <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-slate-700 mb-2">
-                  Glissez-déposez vos fichiers ici
+                  Glissez-déposez vos images ici
                 </h3>
                 <p className="text-slate-500 mb-4">
                   ou cliquez pour sélectionner des fichiers
                 </p>
-                <button className="px-6 py-3 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-colors">
-                  Choisir des fichiers
+                <button 
+                  type="button"
+                  className="px-6 py-3 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFileSelect(e);
+                  }}
+                >
+                  Choisir des images
                 </button>
                 <p className="text-xs text-slate-400 mt-4">
-                  Formats acceptés: JPG, PNG, PDF - Taille max: 10MB par fichier
+                  Formats acceptés: JPG, PNG, GIF - Taille max: 10MB par fichier
                 </p>
               </div>
 
-              {/* Preview Area (when files are selected) */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {/* File preview placeholder */}
-                <div className="aspect-square bg-slate-100 rounded-xl flex items-center justify-center border border-dashed border-slate-300">
-                  <Camera className="h-8 w-8 text-slate-400" />
+              {/* Preview Area */}
+              {formData.photos && formData.photos.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {formData.photos.map((photo) => (
+                    <div key={photo.id} className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden">
+                      <img 
+                        src={photo.url} 
+                        alt={photo.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={() => removePhoto(photo.id)}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                      >
+                        ×
+                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-xs truncate">
+                        {photo.name}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Add more photos button */}
+                  <div 
+                    className="aspect-square bg-slate-100 rounded-xl flex items-center justify-center border border-dashed border-slate-300 cursor-pointer hover:border-violet-400 hover:bg-violet-50 transition-colors"
+                    onClick={handleFileSelect}
+                  >
+                    <div className="text-center">
+                      <Camera className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-xs text-slate-500">Ajouter</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
