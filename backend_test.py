@@ -281,34 +281,166 @@ class TaxCalculationAPITester:
             validate_response=self.validate_case_c_response
         )
 
-    def test_projects_endpoints(self):
-        """Test projects CRUD endpoints"""
-        # Test GET projects
-        success_get, _ = self.run_test(
-            "Get Projects List",
+    def test_projects_crud_comprehensive(self):
+        """Test comprehensive Project CRUD operations as requested"""
+        print("\n📋 Testing Project CRUD Operations...")
+        
+        # Test 1: GET projects list
+        success_get, projects_response = self.run_test(
+            "GET Projects List",
             "GET",
             "projects",
             200
         )
         
-        # Test POST project creation
+        # Test 2: POST project creation with full address (Google Maps scenario)
         project_data = {
-            "label": f"Test Project {datetime.now().strftime('%H%M%S')}",
-            "address": {"street": "123 Test St", "city": "Paris"},
+            "label": "Test Google Maps Project",
+            "address": {
+                "line1": "10 Rue de la Paix",
+                "city": "Paris", 
+                "dept": "75"
+            },
             "regime_tva": "MARGE",
             "prix_achat_ttc": 300000,
-            "prix_vente_ttc": 400000
+            "prix_vente_ttc": 450000,
+            "travaux_ttc": 50000,
+            "frais_agence_ttc": 10000
         }
         
-        success_post, response = self.run_test(
-            "Create New Project",
+        success_post, create_response = self.run_test(
+            "POST Create Project with Full Address",
             "POST",
             "projects",
             200,
             data=project_data
         )
         
-        return success_get and success_post
+        if not success_post or 'id' not in create_response:
+            print("❌ Cannot continue CRUD tests without project creation")
+            return False
+            
+        project_id = create_response['id']
+        print(f"✅ Created project with ID: {project_id}")
+        
+        # Test 3: GET specific project details
+        success_get_detail, detail_response = self.run_test(
+            "GET Project Details",
+            "GET",
+            f"projects/{project_id}",
+            200
+        )
+        
+        # Validate cost distribution data for pie chart
+        if success_get_detail:
+            required_cost_fields = ['prix_achat_ttc', 'travaux_ttc', 'frais_agence_ttc']
+            missing_fields = [field for field in required_cost_fields if field not in detail_response]
+            if missing_fields:
+                print(f"❌ Missing cost distribution fields: {missing_fields}")
+            else:
+                print(f"✅ All cost distribution fields present for pie chart")
+        
+        # Test 4: PATCH project update (address change for Google Maps)
+        update_data = {
+            "address": {
+                "line1": "15 Avenue des Champs-Élysées",
+                "city": "Paris",
+                "dept": "75"
+            },
+            "prix_vente_ttc": 480000  # Also test dynamic calculation
+        }
+        
+        success_patch, update_response = self.run_test(
+            "PATCH Update Project Address",
+            "PATCH",
+            f"projects/{project_id}",
+            200,
+            data=update_data
+        )
+        
+        # Validate dynamic recalculation
+        if success_patch and 'marge_estimee' in update_response:
+            expected_margin = 480000 - 300000 - 50000 - 10000  # 120000
+            actual_margin = update_response['marge_estimee']
+            if abs(actual_margin - expected_margin) < 1:
+                print(f"✅ Dynamic calculation correct: {actual_margin:,.2f}€")
+            else:
+                print(f"❌ Dynamic calculation incorrect: got {actual_margin:,.2f}€, expected {expected_margin:,.2f}€")
+        
+        # Test 5: DELETE project
+        success_delete, _ = self.run_test(
+            "DELETE Project",
+            "DELETE",
+            f"projects/{project_id}",
+            200
+        )
+        
+        return all([success_get, success_post, success_get_detail, success_patch, success_delete])
+
+    def validate_project_creation_response(self, response_data):
+        """Validate project creation response has all required fields"""
+        required_fields = ['id', 'label', 'address', 'regime_tva', 'prix_achat_ttc', 'prix_vente_ttc']
+        missing_fields = [field for field in required_fields if field not in response_data]
+        
+        if missing_fields:
+            return {"valid": False, "message": f"Missing required fields: {', '.join(missing_fields)}"}
+        
+        # Validate address structure for Google Maps
+        address = response_data.get('address', {})
+        if not isinstance(address, dict):
+            return {"valid": False, "message": "Address should be an object"}
+        
+        address_fields = ['line1', 'city', 'dept']
+        missing_address_fields = [field for field in address_fields if field not in address]
+        if missing_address_fields:
+            return {"valid": False, "message": f"Missing address fields: {', '.join(missing_address_fields)}"}
+        
+        return {"valid": True, "message": "Project creation response valid with complete address data"}
+
+    def test_project_validation_scenarios(self):
+        """Test project validation scenarios"""
+        print("\n🔍 Testing Project Validation Scenarios...")
+        
+        # Test invalid data - price validation
+        invalid_project = {
+            "label": "Invalid Project",
+            "address": {"line1": "Test", "city": "Paris", "dept": "75"},
+            "regime_tva": "MARGE",
+            "prix_achat_ttc": 300000,
+            "prix_vente_ttc": 250000,  # Lower than purchase price
+            "travaux_ttc": 50000,
+            "frais_agence_ttc": 10000
+        }
+        
+        success_invalid, _ = self.run_test(
+            "POST Invalid Project (Sale < Purchase)",
+            "POST",
+            "projects",
+            422,  # Expect validation error
+            data=invalid_project
+        )
+        
+        # Test valid project with validation
+        valid_project = {
+            "label": "Valid Test Project",
+            "address": {"line1": "10 Rue de la Paix", "city": "Paris", "dept": "75"},
+            "regime_tva": "MARGE",
+            "prix_achat_ttc": 300000,
+            "prix_vente_ttc": 450000,
+            "travaux_ttc": 50000,
+            "frais_agence_ttc": 10000
+        }
+        
+        success_valid, _ = self.run_test(
+            "POST Valid Project Creation",
+            "POST",
+            "projects",
+            200,
+            data=valid_project,
+            validate_response=self.validate_project_creation_response
+        )
+        
+        return success_invalid and success_valid
 
     def validate_all_required_fields(self, response_data):
         """Validate all required fields are present in estimate response"""
