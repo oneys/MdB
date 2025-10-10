@@ -3008,7 +3008,7 @@ const MainApp = () => {
 
   // Use modern UI if enabled
   if (useModernUI) {
-    return <ModernApp onSwitchToClassic={handleSwitchToClassic} />;
+    return <ModernApp onSwitchToClassic={handleSwitchToClassic} user={user} logout={logout} />;
   }
 
   return (
