@@ -16,7 +16,7 @@ import {
   Percent
 } from 'lucide-react';
 
-const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate }) => {
+const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate, onProjectDelete }) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState('overview');
 
