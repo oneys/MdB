@@ -175,6 +175,39 @@ const ModernApp = ({ onSwitchToClassic, user, logout }) => {
     setActiveTab("dashboard");
   };
 
+  const handleProjectDelete = async (projectId) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/projects/${projectId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete project: ${response.status}`);
+      }
+
+      // Remove project from local state
+      setProjects(prev => prev.filter(p => p.id !== projectId));
+      
+      // If the deleted project was selected, go back to dashboard
+      if (selectedProject?.id === projectId) {
+        setSelectedProject(null);
+        setActiveTab("dashboard");
+      }
+
+      console.log(`✅ Projet supprimé avec succès`);
+      
+    } catch (error) {
+      console.error('Erreur lors de la suppression du projet:', error);
+      throw error; // Re-throw to let the component handle the error notification
+    }
+  };
+
+  const handleProjectEdit = (project) => {
+    setSelectedProject(project);
+    setActiveTab("project-edit");
+  };
+
   // Show homepage if not authenticated
   if (!user) {
     return <ModernHomePage />;
