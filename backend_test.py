@@ -895,18 +895,22 @@ def main():
     tester.test_case_c_exoneration()
     tester.test_comprehensive_field_validation()
     
-    print("\n📁 PHASE 4: PROJECT MANAGEMENT")
+    print("\n📁 PHASE 4: PROJECT CRUD OPERATIONS")
+    tester.test_projects_crud_comprehensive()
+    tester.test_project_validation_scenarios()
+    
+    print("\n📁 PHASE 5: PROJECT MANAGEMENT & DOCUMENTS")
     if tester.create_test_project():
-        print("\n📤 PHASE 5: DOCUMENT MANAGEMENT")
+        print("\n📤 PHASE 6: DOCUMENT MANAGEMENT")
         tester.test_document_upload()
         tester.test_document_in_project_list()
         tester.test_document_download()
         
-        print("\n📄 PHASE 6: PDF EXPORT")
+        print("\n📄 PHASE 7: PDF EXPORT")
         tester.test_pdf_export_bank()
         tester.test_pdf_export_notary()
         
-        print("\n🔄 PHASE 7: DYNAMIC CALCULATIONS")
+        print("\n🔄 PHASE 8: DYNAMIC CALCULATIONS")
         tester.test_dynamic_calculations()
     else:
         print("❌ Cannot proceed with document and export tests without test project")
