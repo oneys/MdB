@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../../App';
 import ModernHomePage from '../../pages/ModernHomePage';
 import ModernSidebar from './ModernSidebar';
 import ModernDashboard from './ModernDashboard';
