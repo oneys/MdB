@@ -274,7 +274,12 @@ const ModernDashboard = ({ projects, onProjectSelect }) => {
                     <td className="py-4 px-6">
                       <div>
                         <div className="font-medium text-slate-900">{project.label}</div>
-                        <div className="text-sm text-slate-500">{project.address}</div>
+                        <div className="text-sm text-slate-500">
+                          {typeof project.address === 'string' 
+                            ? project.address 
+                            : project.address?.line1 || 'Adresse non renseignée'
+                          }
+                        </div>
                       </div>
                     </td>
                     <td className="py-4 px-6">
