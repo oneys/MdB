@@ -390,12 +390,12 @@ const ModernEstimator = () => {
               </div>
 
               {/* Explanation */}
-              {results.explanation && (
+              {results.explain && (
                 <div className="mt-6 p-4 bg-slate-50 rounded-xl">
                   <h4 className="font-medium text-slate-900 mb-2 text-sm">Détails du calcul</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {results.explanation}
-                  </p>
+                  <pre className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-mono">
+                    {results.explain}
+                  </pre>
                 </div>
               )}
             </div>
