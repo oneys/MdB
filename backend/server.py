@@ -1745,13 +1745,16 @@ async def update_project_status(
     }
     
     # Update project
-    update_data = {
-        "status": new_status,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-        "$push": {"events": status_event}
-    }
-    
-    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    await db.projects.update_one(
+        {"id": project_id},
+        {
+            "$set": {
+                "status": new_status,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$push": {"events": status_event}
+        }
+    )
     
     # Return updated project
     updated_project = await db.projects.find_one({"id": project_id})
