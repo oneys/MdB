@@ -10,7 +10,8 @@ import {
   AlertCircle,
   ArrowUpRight,
   ArrowDownRight,
-  MoreHorizontal
+  MoreHorizontal,
+  BarChart3
 } from 'lucide-react';
 
 const ModernDashboard = ({ projects, onProjectSelect }) => {
