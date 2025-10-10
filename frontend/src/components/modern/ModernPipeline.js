@@ -10,7 +10,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 
-const ModernPipeline = ({ projects, onProjectSelect, onProjectStatusUpdate, onProjectCreate }) => {
+const ModernPipeline = ({ projects, onProjectSelect, onProjectStatusUpdate, onProjectCreate, onProjectUpdate, onProjectDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedProject, setDraggedProject] = useState(null);
 
