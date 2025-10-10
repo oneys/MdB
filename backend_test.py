@@ -49,6 +49,8 @@ class TaxCalculationAPITester:
                     response = requests.post(url, json=data, headers=headers, cookies=cookies, timeout=10)
             elif method == 'PATCH':
                 response = requests.patch(url, json=data, headers=headers, cookies=cookies, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, cookies=cookies, timeout=10)
 
             success = response.status_code == expected_status
             response_data = {}
