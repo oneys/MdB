@@ -252,12 +252,55 @@ const ModernDashboard = ({ projects, onProjectSelect }) => {
             </button>
           </div>
 
-          {/* Donut Chart Placeholder */}
+          {/* Donut Chart */}
           <div className="flex items-center justify-center mb-6">
-            <div className="relative w-48 h-48 bg-gradient-to-br from-violet-50 to-blue-50 rounded-full flex items-center justify-center border border-violet-100">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-slate-900">{((activeProjects / totalProjects) * 100).toFixed(0)}%</div>
-                <div className="text-sm text-slate-600">Projets actifs</div>
+            <div className="relative w-48 h-48">
+              <svg className="w-full h-full" viewBox="0 0 200 200">
+                {/* Background circle */}
+                <circle cx="100" cy="100" r="80" fill="none" stroke="#e2e8f0" strokeWidth="20" />
+                
+                {/* Active projects arc */}
+                <circle 
+                  cx="100" 
+                  cy="100" 
+                  r="80" 
+                  fill="none" 
+                  stroke="url(#donutGradient)" 
+                  strokeWidth="20"
+                  strokeDasharray={`${(activeProjects / totalProjects) * 502.65} 502.65`}
+                  strokeDashoffset="125.66"
+                  transform="rotate(-90 100 100)"
+                  className="transition-all duration-1000"
+                />
+                
+                {/* Sold projects arc */}
+                <circle 
+                  cx="100" 
+                  cy="100" 
+                  r="80" 
+                  fill="none" 
+                  stroke="#10b981" 
+                  strokeWidth="20"
+                  strokeDasharray={`${(soldProjects / totalProjects) * 502.65} 502.65`}
+                  strokeDashoffset={`${125.66 - (activeProjects / totalProjects) * 502.65}`}
+                  transform="rotate(-90 100 100)"
+                />
+                
+                {/* Gradient */}
+                <defs>
+                  <linearGradient id="donutGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#8b5cf6"/>
+                    <stop offset="100%" stopColor="#3b82f6"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              
+              {/* Center text */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-slate-900">{((activeProjects / totalProjects) * 100).toFixed(0)}%</div>
+                  <div className="text-sm text-slate-600">Projets actifs</div>
+                </div>
               </div>
             </div>
           </div>
