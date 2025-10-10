@@ -279,6 +279,16 @@ const ModernApp = ({ onSwitchToClassic, user, logout }) => {
           />
         )}
 
+        {activeTab === "project-edit" && selectedProject && (
+          <ModernProjectEdit
+            project={selectedProject}
+            onBack={() => {
+              setActiveTab("project-detail");
+            }}
+            onProjectUpdate={handleProjectUpdate}
+          />
+        )}
+
         {/* Placeholder for remaining tabs */}
         {["dataroom", "analytics", "calendar", "settings"].includes(activeTab) && (
           <div className="p-8">
