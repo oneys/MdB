@@ -17,6 +17,7 @@ import { Progress } from "./components/ui/progress";
 import { Textarea } from "./components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
 import AnalyticsPanel from "./components/AnalyticsPanel";
+import ModernApp from './components/modern/ModernApp';
 import { 
   Calculator, 
   Building2, 
