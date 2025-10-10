@@ -63,6 +63,27 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
     window.open(`https://maps.google.com/?q=${encodedAddress}`, '_blank');
   };
 
+  const handleEdit = () => {
+    onProjectUpdate && onProjectUpdate(project);
+  };
+
+  const handleDelete = async () => {
+    // Double confirmation
+    const firstConfirm = window.confirm(`Êtes-vous sûr de vouloir supprimer le projet "${project.label}" ?`);
+    if (firstConfirm) {
+      const secondConfirm = window.confirm(`ATTENTION : Cette action est irréversible ! Confirmez-vous la suppression définitive de "${project.label}" ?`);
+      if (secondConfirm) {
+        try {
+          await onProjectDelete(project.id);
+          onBack(); // Return to previous view after deletion
+        } catch (error) {
+          console.error('Erreur suppression:', error);
+          alert('❌ Erreur lors de la suppression');
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header with Back Button */}
