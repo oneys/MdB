@@ -203,17 +203,7 @@ const ModernApp = ({ onSwitchToClassic, user, logout }) => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        {/* Switch to Classic UI Button */}
-        <div className="absolute top-4 right-4 z-50">
-          <button
-            onClick={onSwitchToClassic}
-            className="flex items-center space-x-2 px-4 py-2 bg-white/90 backdrop-blur-md text-slate-700 hover:text-slate-900 rounded-xl border border-slate-200 shadow-lg hover:shadow-xl transition-all"
-            title="Basculer vers l'interface classique"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm font-medium">Interface classique</span>
-          </button>
-        </div>
+        {/* Modern Interface Only */}
 
         {/* Content based on active tab */}
         {activeTab === "dashboard" && (
