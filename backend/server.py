@@ -462,6 +462,9 @@ class ProjectUpdate(BaseModel):
     milestones: Optional[Dict[str, Optional[str]]] = None
     financing: Optional[Dict[str, Any]] = None
 
+class ProjectStatusUpdate(BaseModel):
+    status: ProjectStatus
+
 class ProjectResponse(BaseModel):
     id: str
     label: str
