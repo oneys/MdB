@@ -2849,10 +2849,24 @@ const FicheProjet = ({ project, onBack, onProjectUpdate, onProjectStatusUpdate }
 
 // Main App Component
 const MainApp = () => {
+  const [useModernUI, setUseModernUI] = useState(() => {
+    return localStorage.getItem('useModernUI') === 'true';
+  });
+  
   const [activeTab, setActiveTab] = useState("dashboard");
   const [projects, setProjects] = useState([]);  // Start with empty array
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const handleSwitchToModern = () => {
+    setUseModernUI(true);
+    localStorage.setItem('useModernUI', 'true');
+  };
+
+  const handleSwitchToClassic = () => {
+    setUseModernUI(false);
+    localStorage.setItem('useModernUI', 'false');
+  };
 
   // Load projects from API on component mount
   React.useEffect(() => {
