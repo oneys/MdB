@@ -107,17 +107,16 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
       try {
         const newProject = {
           label: formData.label,
-          address: formData.address,
-          city: formData.city,
-          dept: formData.dept,
+          address: {
+            line1: formData.address,
+            city: formData.city,
+            zipcode: formData.dept
+          },
           prix_achat_ttc: parseFloat(formData.prix_achat_ttc) || 0,
           prix_vente_ttc: parseFloat(formData.prix_vente_ttc) || 0,
           travaux_ttc: parseFloat(formData.travaux_ttc) || 0,
           frais_agence_ttc: parseFloat(formData.frais_agence_ttc) || 0,
-          regime_tva: formData.regime_tva,
-          status: 'DETECTE',
-          description: formData.description || '',
-          created_at: new Date().toISOString()
+          regime_tva: formData.regime_tva
         };
         
         console.log('💾 Création du projet:', newProject);
