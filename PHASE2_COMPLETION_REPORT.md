@@ -123,7 +123,7 @@
 
 ### Pour tester les nouvelles fonctionnalités :
 
-1. **Accès** : https://realty-tracker-7.preview.emergentagent.com
+1. **Accès** : https://realestate-saas-3.preview.emergentagent.com
 2. **Connexion** : "Session Développement (Temporaire)"
 3. **Pipeline** : Onglet "Pipeline" → Drag & Drop projets
 4. **Création** : Bouton "Nouveau Projet" → Formulaire complet
