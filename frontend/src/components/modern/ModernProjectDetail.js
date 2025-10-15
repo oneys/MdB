@@ -126,8 +126,8 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
         <div className="absolute inset-0 bg-black/40"></div>
         
         {/* Project Title Overlay */}
-        <div className="absolute bottom-8 left-8 right-8">
-          <div className="flex items-end justify-between">
+        <div className="absolute bottom-8 left-8 right-8" style={{ overflow: 'visible' }}>
+          <div className="flex items-end justify-between" style={{ overflow: 'visible' }}>
             <div>
               <h1 className="text-4xl font-bold text-white mb-2">{project.label}</h1>
               <div className="flex items-center text-white/90 text-lg">
