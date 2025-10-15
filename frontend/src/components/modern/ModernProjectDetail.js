@@ -112,23 +112,7 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
             Retour aux projets
           </button>
           
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleEdit}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
-            >
-              <Edit className="h-4 w-4" />
-              <span>Modifier</span>
-            </button>
-            
-            <button
-              onClick={handleDelete}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Supprimer</span>
-            </button>
-          </div>
+          <div className="w-20"></div> {/* Spacer */}
         </div>
       </div>
 
