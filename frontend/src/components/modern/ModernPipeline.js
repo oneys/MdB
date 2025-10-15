@@ -300,7 +300,7 @@ const ModernPipeline = ({ projects, onProjectSelect, onProjectStatusUpdate, onPr
   };
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
+    <div className="p-8 pb-32 bg-slate-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
