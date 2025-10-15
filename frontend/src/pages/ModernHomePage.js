@@ -88,7 +88,10 @@ const ModernHomePage = () => {
                 <ArrowRight className="h-5 w-5" />
               </button>
               
-              <button className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-8 py-4 rounded-2xl font-semibold text-lg border border-white/20 transition-all hover:border-white/40">
+              <button 
+                onClick={() => window.location.href = '/app'}
+                className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-8 py-4 rounded-2xl font-semibold text-lg border border-white/20 transition-all hover:border-white/40"
+              >
                 Voir la démo
               </button>
             </div>
