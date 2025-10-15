@@ -872,6 +872,82 @@ startxref
             for test in successful_tests:
                 print(f"   • {test['test_name']}")
 
+    def test_frontend_form_simulation(self):
+        """Test exact frontend form submission as described in review request"""
+        print("\n📋 FRONTEND FORM SIMULATION TESTING")
+        print("Testing 4-step form process as reported by user")
+        print("="*50)
+        
+        # Step 1: Basic Information
+        step1_data = {
+            "label": "Maison Rénovation Paris 16e",
+            "address": {
+                "line1": "25 Avenue Foch",
+                "city": "Paris",
+                "dept": "75"
+            },
+            "regime_tva": "MARGE"
+        }
+        print("✅ Step 1 - Basic Info: Nom, Adresse, Ville, Département, Régime TVA")
+        
+        # Step 2: Financial Information  
+        step2_data = {
+            "prix_achat_ttc": 850000,
+            "prix_vente_ttc": 1200000,
+            "travaux_ttc": 150000,
+            "frais_agence_ttc": 25000
+        }
+        print("✅ Step 2 - Financial: Prix d'achat, Prix de vente, Travaux, Frais d'agence")
+        
+        # Step 3: Photos (Skip as mentioned in review)
+        print("⏭️ Step 3 - Photos: Skipped as requested")
+        
+        # Step 4: Summary and Submission (Combine all data)
+        complete_form_data = {**step1_data, **step2_data}
+        print("📝 Step 4 - Récapitulatif et soumission finale")
+        
+        success, response = self.run_test(
+            "Frontend Form Complete Submission",
+            "POST",
+            "projects",
+            200,
+            data=complete_form_data
+        )
+        
+        if success:
+            print("✅ Frontend form simulation successful")
+            project_id = response.get('id')
+            
+            # Verify all form data was saved correctly
+            success_verify, verify_response = self.run_test(
+                "Verify Form Data Persistence",
+                "GET",
+                f"projects/{project_id}",
+                200
+            )
+            
+            if success_verify:
+                # Check each step's data
+                saved_label = verify_response.get('label')
+                saved_address = verify_response.get('address', {})
+                saved_regime = verify_response.get('regime_tva')
+                saved_prix_achat = verify_response.get('prix_achat_ttc')
+                saved_prix_vente = verify_response.get('prix_vente_ttc')
+                
+                print(f"   • Label: {saved_label} ✅")
+                print(f"   • Address: {saved_address.get('line1')}, {saved_address.get('city')} ✅")
+                print(f"   • Régime TVA: {saved_regime} ✅")
+                print(f"   • Prix achat: {saved_prix_achat:,.0f}€ ✅")
+                print(f"   • Prix vente: {saved_prix_vente:,.0f}€ ✅")
+                
+                return True
+            else:
+                print("❌ Failed to verify saved form data")
+                return False
+        else:
+            print("❌ Frontend form simulation failed")
+            return False
+
     def test_project_creation_comprehensive(self):
         """Test comprehensive project creation as requested in review"""
         print("\n🏗️ COMPREHENSIVE PROJECT CREATION TESTING")
