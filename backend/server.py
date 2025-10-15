@@ -407,6 +407,7 @@ class Project(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     label: str
     address: Dict[str, str] = Field(default_factory=dict)
+    google_maps_link: Optional[str] = None
     status: ProjectStatus = ProjectStatus.DETECTE
     regime_tva: RegimeTVA = RegimeTVA.MARGE
     prix_achat_ttc: float = 0
