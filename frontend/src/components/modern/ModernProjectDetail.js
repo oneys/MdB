@@ -117,7 +117,7 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
       </div>
 
       {/* Hero Banner with Project Image */}
-      <div className="relative h-96 bg-gradient-to-r from-violet-600 to-blue-600">
+      <div className="relative h-96 bg-gradient-to-r from-violet-600 to-blue-600 overflow-hidden">
         <img
           src={projectImages[selectedImage]}
           alt={project.label}
