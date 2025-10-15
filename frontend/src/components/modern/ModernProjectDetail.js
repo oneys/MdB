@@ -140,7 +140,7 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
             </div>
             
             {/* Status Badge - Clickable Dropdown */}
-            <div className="relative z-50" ref={dropdownRef}>
+            <div className="relative z-[9999]" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={(e) => {
@@ -158,7 +158,7 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
               {/* Status Dropdown Menu */}
               {showStatusDropdown && (
                 <div 
-                  className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50 max-h-96 overflow-y-auto"
+                  className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-[9999] max-h-96 overflow-y-auto"
                   onMouseDown={(e) => e.stopPropagation()}
                 >
                   {Object.entries(statusConfig).map(([statusKey, config]) => (
