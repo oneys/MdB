@@ -72,9 +72,12 @@ const ModernProjectEdit = ({ project, onBack, onProjectUpdate }) => {
       const updatedProject = {
         ...project,
         label: formData.label,
-        address: formData.address,
-        city: formData.city,
-        dept: formData.dept,
+        address: {
+          line1: formData.address,
+          city: formData.city,
+          zipcode: formData.dept,
+          dept: formData.dept
+        },
         prix_achat_ttc: parseFloat(formData.prix_achat_ttc),
         prix_vente_ttc: parseFloat(formData.prix_vente_ttc),
         travaux_ttc: parseFloat(formData.travaux_ttc) || 0,
