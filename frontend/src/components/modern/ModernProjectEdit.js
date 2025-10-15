@@ -200,41 +200,42 @@ const ModernProjectEdit = ({ project, onBack, onProjectUpdate }) => {
                     )}
                   </div>
 
-                  {/* Adresse et ville */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Adresse *
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const address = `${formData.address}, ${formData.city}, France`;
-                            const url = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
-                            window.open(url, '_blank');
-                          }}
-                          className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          📍 Voir sur Google Maps
-                        </button>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
-                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                          errors.address 
-                            ? 'border-red-300 focus:ring-red-500' 
-                            : 'border-slate-300 focus:ring-blue-500'
-                        }`}
-                      />
-                      {errors.address && (
-                        <p className="mt-2 text-sm text-red-600 flex items-center">
-                          <AlertCircle className="h-4 w-4 mr-1" />
-                          {errors.address}
-                        </p>
-                      )}
-                    </div>
+                  {/* Adresse */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Adresse *
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const address = `${formData.address}, ${formData.city}, France`;
+                          const url = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+                          window.open(url, '_blank');
+                        }}
+                        className="ml-2 text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        📍 Voir sur Google Maps
+                      </button>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
+                        errors.address 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-slate-300 focus:ring-blue-500'
+                      }`}
+                    />
+                    {errors.address && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <AlertCircle className="h-4 w-4 mr-1" />
+                        {errors.address}
+                      </p>
+                    )}
+                  </div>
 
+                  {/* Ville et Département */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Ville
@@ -244,6 +245,20 @@ const ModernProjectEdit = ({ project, onBack, onProjectUpdate }) => {
                         value={formData.city}
                         onChange={(e) => handleInputChange('city', e.target.value)}
                         className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ex: Paris"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Département
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.dept}
+                        onChange={(e) => handleInputChange('dept', e.target.value)}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ex: 75"
                       />
                     </div>
                   </div>
