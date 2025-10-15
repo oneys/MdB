@@ -872,8 +872,191 @@ startxref
             for test in successful_tests:
                 print(f"   • {test['test_name']}")
 
+    def test_project_creation_comprehensive(self):
+        """Test comprehensive project creation as requested in review"""
+        print("\n🏗️ COMPREHENSIVE PROJECT CREATION TESTING")
+        print("="*50)
+        
+        all_tests_passed = True
+        
+        # Test 1: Direct API POST with minimal valid data
+        print("\n📝 Test 1: Direct API POST /api/projects")
+        minimal_project = {
+            "label": "Test API Direct",
+            "address": {
+                "line1": "10 rue Test",
+                "city": "Paris", 
+                "dept": "75"
+            },
+            "regime_tva": "MARGE",
+            "prix_achat_ttc": 300000,
+            "prix_vente_ttc": 450000,
+            "travaux_ttc": 50000,
+            "frais_agence_ttc": 10000
+        }
+        
+        success_direct, response_direct = self.run_test(
+            "Direct API Project Creation",
+            "POST",
+            "projects",
+            200,
+            data=minimal_project
+        )
+        
+        if not success_direct:
+            print("❌ CRITICAL: Direct API project creation failed")
+            all_tests_passed = False
+        else:
+            created_project_id = response_direct.get('id')
+            print(f"✅ Project created successfully with ID: {created_project_id}")
+            
+            # Test 2: Verify persistence in DB via GET
+            print("\n📋 Test 2: Verify persistence in database")
+            success_get, get_response = self.run_test(
+                "GET Created Project",
+                "GET",
+                f"projects/{created_project_id}",
+                200
+            )
+            
+            if success_get:
+                print("✅ Project persisted correctly in database")
+                # Verify all fields are present
+                expected_fields = ['id', 'label', 'address', 'regime_tva', 'prix_achat_ttc', 'prix_vente_ttc']
+                missing_fields = [f for f in expected_fields if f not in get_response]
+                if missing_fields:
+                    print(f"❌ Missing fields in persisted project: {missing_fields}")
+                    all_tests_passed = False
+                else:
+                    print("✅ All required fields present in persisted project")
+            else:
+                print("❌ CRITICAL: Created project not found in database")
+                all_tests_passed = False
+            
+            # Test 3: Verify project appears in projects list
+            print("\n📊 Test 3: Verify project appears in projects list")
+            success_list, list_response = self.run_test(
+                "GET Projects List",
+                "GET",
+                "projects",
+                200
+            )
+            
+            if success_list:
+                projects = list_response if isinstance(list_response, list) else []
+                project_ids = [p.get('id') for p in projects if isinstance(p, dict)]
+                if created_project_id in project_ids:
+                    print("✅ Created project appears in projects list")
+                else:
+                    print("❌ Created project NOT found in projects list")
+                    all_tests_passed = False
+            else:
+                print("❌ Failed to retrieve projects list")
+                all_tests_passed = False
+        
+        # Test 4: Error cases - Invalid data
+        print("\n❌ Test 4: Error cases - Invalid data")
+        
+        # Test 4a: Prix vente < prix achat
+        invalid_project_1 = {
+            "label": "Invalid Project - Price",
+            "address": {"line1": "Test", "city": "Paris", "dept": "75"},
+            "regime_tva": "MARGE",
+            "prix_achat_ttc": 300000,
+            "prix_vente_ttc": 250000,  # Lower than purchase
+            "travaux_ttc": 50000,
+            "frais_agence_ttc": 10000
+        }
+        
+        success_invalid_1, _ = self.run_test(
+            "Invalid Project (Sale < Purchase)",
+            "POST",
+            "projects",
+            422,  # Expect validation error
+            data=invalid_project_1
+        )
+        
+        if success_invalid_1:
+            print("✅ Correctly rejected invalid project (sale < purchase)")
+        else:
+            print("❌ Should have rejected invalid project (sale < purchase)")
+            all_tests_passed = False
+        
+        # Test 4b: Missing required fields
+        invalid_project_2 = {
+            "label": "Invalid Project - Missing Fields",
+            "regime_tva": "MARGE",
+            "prix_achat_ttc": 300000
+            # Missing required fields
+        }
+        
+        success_invalid_2, _ = self.run_test(
+            "Invalid Project (Missing Fields)",
+            "POST",
+            "projects",
+            422,  # Expect validation error
+            data=invalid_project_2
+        )
+        
+        if success_invalid_2:
+            print("✅ Correctly rejected project with missing fields")
+        else:
+            print("❌ Should have rejected project with missing fields")
+            all_tests_passed = False
+        
+        # Test 5: Multi-step form simulation
+        print("\n📋 Test 5: Multi-step form data simulation")
+        
+        # Simulate complete 4-step form data
+        complete_form_data = {
+            # Step 1: Basic info
+            "label": "Projet Formulaire Complet",
+            "address": {
+                "line1": "15 Avenue des Champs-Élysées",
+                "city": "Paris",
+                "dept": "75"
+            },
+            "regime_tva": "MARGE",
+            
+            # Step 2: Financial data
+            "prix_achat_ttc": 400000,
+            "prix_vente_ttc": 600000,
+            "travaux_ttc": 80000,
+            "frais_agence_ttc": 20000,
+            
+            # Step 3: Photos (simulated - would be handled separately)
+            # Step 4: Summary and submission (all data combined)
+        }
+        
+        success_form, response_form = self.run_test(
+            "Complete Form Submission",
+            "POST",
+            "projects",
+            200,
+            data=complete_form_data
+        )
+        
+        if success_form:
+            print("✅ Complete form submission successful")
+            form_project_id = response_form.get('id')
+            
+            # Verify dynamic calculations
+            marge_estimee = response_form.get('marge_estimee', 0)
+            expected_marge = 600000 - 400000 - 80000 - 20000  # 100000
+            if abs(marge_estimee - expected_marge) < 1:
+                print(f"✅ Dynamic margin calculation correct: {marge_estimee:,.2f}€")
+            else:
+                print(f"❌ Dynamic margin calculation incorrect: got {marge_estimee:,.2f}€, expected {expected_marge:,.2f}€")
+                all_tests_passed = False
+        else:
+            print("❌ Complete form submission failed")
+            all_tests_passed = False
+        
+        return all_tests_passed
+
 def main():
-    print("🏢 Starting Comprehensive Backend API Tests")
+    print("🏢 COMPREHENSIVE PROJECT CREATION TESTING")
+    print("Testing complete project creation flow as requested")
     print("="*60)
     
     tester = TaxCalculationAPITester()
@@ -885,41 +1068,34 @@ def main():
         tester.print_summary()
         return 1
     
-    # Run all tests
-    print("\n🌐 PHASE 2: API HEALTH")
+    # Focus on project creation testing as requested
+    print("\n🏗️ PHASE 2: PROJECT CREATION COMPREHENSIVE TESTING")
+    creation_success = tester.test_project_creation_comprehensive()
+    
+    # Additional API health check
+    print("\n🌐 PHASE 3: API HEALTH VERIFICATION")
     tester.test_api_health()
-    
-    print("\n🧮 PHASE 3: CORE BUSINESS CALCULATIONS")
-    tester.test_case_a_tva_marge_mdb()
-    tester.test_case_b_tva_normale()
-    tester.test_case_c_exoneration()
-    tester.test_comprehensive_field_validation()
-    
-    print("\n📁 PHASE 4: PROJECT CRUD OPERATIONS")
-    tester.test_projects_crud_comprehensive()
-    tester.test_project_validation_scenarios()
-    
-    print("\n📁 PHASE 5: PROJECT MANAGEMENT & DOCUMENTS")
-    if tester.create_test_project():
-        print("\n📤 PHASE 6: DOCUMENT MANAGEMENT")
-        tester.test_document_upload()
-        tester.test_document_in_project_list()
-        tester.test_document_download()
-        
-        print("\n📄 PHASE 7: PDF EXPORT")
-        tester.test_pdf_export_bank()
-        tester.test_pdf_export_notary()
-        
-        print("\n🔄 PHASE 8: DYNAMIC CALCULATIONS")
-        tester.test_dynamic_calculations()
-    else:
-        print("❌ Cannot proceed with document and export tests without test project")
     
     # Print summary
     tester.print_summary()
     
+    # Specific summary for project creation
+    print(f"\n" + "="*60)
+    print(f"🎯 PROJECT CREATION TEST RESULTS")
+    print(f"="*60)
+    if creation_success:
+        print("✅ ALL PROJECT CREATION TESTS PASSED")
+        print("   • Direct API POST /api/projects: ✅")
+        print("   • Database persistence: ✅") 
+        print("   • Projects list integration: ✅")
+        print("   • Error handling (invalid data): ✅")
+        print("   • Multi-step form simulation: ✅")
+    else:
+        print("❌ PROJECT CREATION TESTS FAILED")
+        print("   Check detailed results above for specific failures")
+    
     # Return exit code
-    return 0 if tester.tests_passed == tester.tests_run else 1
+    return 0 if creation_success else 1
 
 if __name__ == "__main__":
     sys.exit(main())
