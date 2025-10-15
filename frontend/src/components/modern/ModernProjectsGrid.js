@@ -99,6 +99,11 @@ const ModernProjectsGrid = ({
     const margin = (project.prix_vente_ttc || 0) - (project.prix_achat_ttc || 0) - (project.travaux_ttc || 0) - (project.frais_agence_ttc || 0);
     const address = typeof project.address === 'string' ? project.address : project.address?.line1 || 'Adresse non renseignée';
     const statusInfo = statusConfig[project.status] || statusConfig.DETECTE;
+    
+    // Get main photo from project images
+    const mainPhoto = project.images && project.images.length > 0 
+      ? project.images[0] 
+      : null;
 
     const handleEdit = (e) => {
       e.stopPropagation();
@@ -138,11 +143,30 @@ const ModernProjectsGrid = ({
         onClick={() => onProjectSelect(project)}
         className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
       >
-        {/* Status Badge */}
-        <div className={`absolute top-0 left-0 right-0 h-2 ${statusInfo.color}`}></div>
+        {/* Photo Banner */}
+        <div className="relative h-48 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
+          {mainPhoto ? (
+            <img 
+              src={mainPhoto} 
+              alt={project.label}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Building className="h-16 w-16 text-slate-300" />
+            </div>
+          )}
+          
+          {/* Status Badge Overlay */}
+          <div className={`absolute top-3 left-3`}>
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor} backdrop-blur-sm bg-opacity-90`}>
+              <span className={`w-2 h-2 rounded-full ${statusInfo.color} mr-2`}></span>
+              {statusInfo.label}
+            </span>
+          </div>
 
-        {/* Action buttons */}
-        <div className="absolute top-4 right-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          {/* Action buttons */}
+          <div className="absolute top-3 right-3 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={handleEdit}
             className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md"
