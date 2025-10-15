@@ -12,6 +12,7 @@ import { Palette, ArrowLeft, LayoutGrid, Kanban } from 'lucide-react';
 
 const ModernApp = ({ onSwitchToClassic, user, logout }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [projectsView, setProjectsView] = useState("grid"); // "grid" or "kanban"
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
