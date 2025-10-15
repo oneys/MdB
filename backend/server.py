@@ -454,6 +454,7 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     label: Optional[str] = None
     address: Optional[Dict[str, str]] = None
+    google_maps_link: Optional[str] = None
     status: Optional[ProjectStatus] = None
     regime_tva: Optional[RegimeTVA] = None
     prix_achat_ttc: Optional[float] = None
