@@ -107,9 +107,9 @@ user_problem_statement: "Stabiliser la création/gestion de projets et rendre l'
 backend:
   - task: "Création de projets"
     implemented: true
-    working: true
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -119,6 +119,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "API endpoints fonctionnels. GET/POST /api/projects retournent 401 (authentication required) comme attendu. Authentification requise pour sécurité, comportement correct."
+      - working: false
+        agent: "testing"
+        comment: "❌ ISSUE IDENTIFIÉ - Validation regex du champ 'label' rejette les caractères accentués français (é, è, à, etc.). Pattern actuel: '^[a-zA-Z0-9\\s\\-_\\.\\,\\(\\)]+$' ne permet pas les accents. Erreur 422: 'String should match pattern' lors de soumission avec 'Maison Rénovation'. API fonctionne parfaitement avec caractères non-accentués. SOLUTION: Modifier le pattern regex pour accepter les caractères Unicode français ou utiliser une validation moins restrictive."
 
   - task: "Estimateur fiscal 3 régimes"
     implemented: true
