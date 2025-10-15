@@ -24,7 +24,7 @@ const ModernProjectsGrid = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
-  const [sortBy, setSortBy] = useState('updated_at'); // updated_at, status, budget, marge
+  const [sortBy, setSortBy] = useState('status'); // Par défaut: tri par statut
   const [showFilters, setShowFilters] = useState(false);
 
   const statusConfig = {
