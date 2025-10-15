@@ -445,8 +445,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All backend functionality validated - TESTING COMPLETE"
-  stuck_tasks: []
+    - "Création de projets - Regex validation issue"
+  stuck_tasks:
+    - "Création de projets - Regex validation française"
   test_all: false
   test_priority: "high_first"
 
