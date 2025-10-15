@@ -140,7 +140,7 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
             </div>
             
             {/* Status Badge - Clickable Dropdown */}
-            <div className="relative" style={{ zIndex: 9999 }} ref={dropdownRef}>
+            <div className="relative z-50" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={(e) => {
@@ -155,44 +155,41 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
                 <ChevronDown className={`h-4 w-4 transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
               </button>
               
-              {/* Status Dropdown Menu - Fixed position for better visibility */}
+              {/* Status Dropdown Menu */}
               {showStatusDropdown && (
-                <>
-                  {/* Backdrop */}
-                  <div 
-                    className="fixed inset-0 bg-black/20 z-[9998]"
-                    onClick={() => setShowStatusDropdown(false)}
-                  />
-                  {/* Dropdown */}
-                  <div 
-                    className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-[9999]"
-                    style={{ zIndex: 9999 }}
-                  >
-                    {Object.entries(statusConfig).map(([statusKey, config]) => (
-                      <button
-                        key={statusKey}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onProjectStatusUpdate(project.id, statusKey);
-                          setShowStatusDropdown(false);
-                        }}
-                        className={`w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors flex items-center space-x-3 ${
-                          project.status === statusKey ? 'bg-violet-50' : ''
-                        }`}
-                      >
-                        <div className={`w-3 h-3 rounded-full ${config.color}`}></div>
-                        <span className={`font-medium ${project.status === statusKey ? 'text-violet-700' : 'text-slate-700'}`}>
-                          {config.label}
-                        </span>
-                        {project.status === statusKey && (
-                          <span className="ml-auto text-violet-600 text-sm">✓</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
+                <div 
+                  className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50 max-h-96 overflow-y-auto"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  {Object.entries(statusConfig).map(([statusKey, config]) => (
+                    <button
+                      key={statusKey}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log(`🔄 Changing status to: ${statusKey}`);
+                        onProjectStatusUpdate(project.id, statusKey);
+                        setShowStatusDropdown(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors flex items-center space-x-3 cursor-pointer ${
+                        project.status === statusKey ? 'bg-violet-50' : ''
+                      }`}
+                    >
+                      <div className={`w-3 h-3 rounded-full ${config.color}`}></div>
+                      <span className={`font-medium ${project.status === statusKey ? 'text-violet-700' : 'text-slate-700'}`}>
+                        {config.label}
+                      </span>
+                      {project.status === statusKey && (
+                        <span className="ml-auto text-violet-600 text-sm">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>
