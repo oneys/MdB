@@ -72,7 +72,18 @@ const ModernProjectsGrid = ({
   const sortedProjects = [...filteredProjects].sort((a, b) => {
     switch (sortBy) {
       case 'status':
-        return (a.status || '').localeCompare(b.status || '');
+        // Ordre personnalisé: DETECTE, OFFRE, SOUS_COMPROMIS, ACTE_SIGNE, TRAVAUX, COMMERCIALISATION, VENDU, ABANDONNE en dernier
+        const statusOrder = {
+          'DETECTE': 1,
+          'OFFRE': 2,
+          'SOUS_COMPROMIS': 3,
+          'ACTE_SIGNE': 4,
+          'TRAVAUX': 5,
+          'COMMERCIALISATION': 6,
+          'VENDU': 7,
+          'ABANDONNE': 8  // Toujours en dernier
+        };
+        return (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9);
       case 'budget':
         return (b.prix_achat_ttc || 0) - (a.prix_achat_ttc || 0);
       case 'marge':
