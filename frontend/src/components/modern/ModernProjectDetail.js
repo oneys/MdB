@@ -155,12 +155,44 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
               </div>
             </div>
             
-            {/* Status Badge */}
-            <div className={`${currentStatus.bgColor} ${currentStatus.textColor} px-4 py-2 rounded-xl border border-white/20 backdrop-blur-md`}>
-              <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${currentStatus.color}`}></div>
-                <span className="font-semibold">{currentStatus.label}</span>
-              </div>
+            {/* Status Badge - Clickable Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                className={`${currentStatus.bgColor} ${currentStatus.textColor} px-4 py-2 rounded-xl border border-white/20 backdrop-blur-md hover:shadow-lg transition-all cursor-pointer`}
+              >
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${currentStatus.color}`}></div>
+                  <span className="font-semibold">{currentStatus.label}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+              
+              {/* Status Dropdown Menu */}
+              {showStatusDropdown && (
+                <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50">
+                  {Object.entries(statusConfig).map(([statusKey, config]) => (
+                    <button
+                      key={statusKey}
+                      onClick={() => {
+                        onProjectStatusUpdate(project.id, statusKey);
+                        setShowStatusDropdown(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors flex items-center space-x-3 ${
+                        project.status === statusKey ? 'bg-violet-50' : ''
+                      }`}
+                    >
+                      <div className={`w-3 h-3 rounded-full ${config.color}`}></div>
+                      <span className={`font-medium ${project.status === statusKey ? 'text-violet-700' : 'text-slate-700'}`}>
+                        {config.label}
+                      </span>
+                      {project.status === statusKey && (
+                        <span className="ml-auto text-violet-600 text-sm">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
