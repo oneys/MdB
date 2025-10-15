@@ -220,6 +220,22 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
           </div>
           
           <div className="flex space-x-2">
+            <button 
+              onClick={handleEdit}
+              className="px-4 py-2 border-2 border-blue-500 text-blue-500 rounded-xl hover:bg-blue-50 transition-colors flex items-center space-x-2"
+            >
+              <Edit className="h-4 w-4" />
+              <span>Modifier</span>
+            </button>
+            
+            <button 
+              onClick={handleDelete}
+              className="px-4 py-2 border-2 border-red-500 text-red-500 rounded-xl hover:bg-red-50 transition-colors flex items-center space-x-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Supprimer</span>
+            </button>
+            
             <button className="px-4 py-2 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-colors flex items-center space-x-2">
               <Upload className="h-4 w-4" />
               <span>Ajouter photos</span>
