@@ -709,6 +709,12 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
                       <span className="text-slate-600">Département:</span>
                       <p className="font-medium text-slate-900">{formData.dept}</p>
                     </div>
+                    {formData.google_maps_link && (
+                      <div className="col-span-2">
+                        <span className="text-slate-600">Google Maps:</span>
+                        <p className="font-medium text-violet-600 truncate">{formData.google_maps_link}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
