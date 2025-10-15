@@ -250,14 +250,70 @@ const ModernApp = ({ onSwitchToClassic, user, logout }) => {
         )}
 
         {activeTab === "pipeline" && (
-          <ModernPipeline
-            projects={projects}
-            onProjectSelect={handleProjectSelect}
-            onProjectStatusUpdate={handleProjectStatusUpdate}
-            onProjectCreate={() => setActiveTab("project-form")}
-            onProjectUpdate={handleProjectEdit}
-            onProjectDelete={handleProjectDelete}
-          />
+          <div className="relative">
+            {/* View Toggle Header */}
+            <div className="bg-white border-b border-slate-200 px-8 py-4 sticky top-0 z-30 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900">
+                    {projectsView === "grid" ? "Vue Projets" : "Pipeline Kanban"}
+                  </h1>
+                  <p className="text-sm text-slate-600 mt-1">
+                    {projectsView === "grid" 
+                      ? "Vue d'ensemble de tous vos projets"
+                      : "Vue Kanban par statut d'avancement"
+                    }
+                  </p>
+                </div>
+                
+                {/* Toggle Buttons */}
+                <div className="flex items-center space-x-2 bg-slate-100 rounded-xl p-1">
+                  <button
+                    onClick={() => setProjectsView("grid")}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      projectsView === "grid"
+                        ? "bg-white text-violet-600 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    <span>Vue Grille</span>
+                  </button>
+                  <button
+                    onClick={() => setProjectsView("kanban")}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      projectsView === "kanban"
+                        ? "bg-white text-violet-600 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Kanban className="h-4 w-4" />
+                    <span>Kanban</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Content based on view */}
+            {projectsView === "grid" ? (
+              <ModernProjectsGrid
+                projects={projects}
+                onProjectSelect={handleProjectSelect}
+                onProjectCreate={() => setActiveTab("project-form")}
+                onProjectUpdate={handleProjectEdit}
+                onProjectDelete={handleProjectDelete}
+              />
+            ) : (
+              <ModernPipeline
+                projects={projects}
+                onProjectSelect={handleProjectSelect}
+                onProjectStatusUpdate={handleProjectStatusUpdate}
+                onProjectCreate={() => setActiveTab("project-form")}
+                onProjectUpdate={handleProjectEdit}
+                onProjectDelete={handleProjectDelete}
+              />
+            )}
+          </div>
         )}
 
         {activeTab === "estimator" && (
