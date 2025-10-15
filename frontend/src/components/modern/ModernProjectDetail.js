@@ -377,13 +377,35 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
                   </div>
                 </div>
 
-                {/* Map Placeholder */}
-                <div className="bg-slate-100 rounded-xl h-64 flex items-center justify-center border border-slate-200">
-                  <div className="text-center">
-                    <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-2" />
-                    <p className="text-slate-600 font-medium">Carte interactive</p>
-                    <p className="text-slate-500 text-sm">Google Maps à intégrer</p>
-                  </div>
+                {/* Google Maps */}
+                <div className="bg-slate-100 rounded-xl h-64 overflow-hidden border border-slate-200">
+                  {project.google_maps_link ? (
+                    <iframe
+                      src={project.google_maps_link.includes('embed') 
+                        ? project.google_maps_link 
+                        : `https://maps.google.com/maps?q=${encodeURIComponent(
+                            typeof project.address === 'string' 
+                              ? project.address 
+                              : `${project.address?.line1 || ''}, ${project.address?.city || ''}`
+                          )}&output=embed`
+                      }
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Google Maps"
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+                        <p className="text-slate-600 font-medium">Carte non disponible</p>
+                        <p className="text-slate-500 text-sm">Ajoutez un lien Google Maps</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
