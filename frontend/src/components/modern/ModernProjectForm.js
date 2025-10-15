@@ -113,6 +113,7 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
             city: formData.city,
             zipcode: formData.dept
           },
+          google_maps_link: formData.google_maps_link || null,
           prix_achat_ttc: parseFloat(formData.prix_achat_ttc) || 0,
           prix_vente_ttc: parseFloat(formData.prix_vente_ttc) || 0,
           travaux_ttc: parseFloat(formData.travaux_ttc) || 0,
