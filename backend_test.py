@@ -880,7 +880,7 @@ startxref
         
         # Step 1: Basic Information
         step1_data = {
-            "label": "Maison Rénovation Paris 16e",
+            "label": "Maison Renovation Paris 16e",
             "address": {
                 "line1": "25 Avenue Foch",
                 "city": "Paris",
