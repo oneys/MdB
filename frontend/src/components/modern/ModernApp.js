@@ -5,9 +5,10 @@ import ModernDashboard from './ModernDashboard';
 import ModernProjectDetail from './ModernProjectDetail';
 import ModernProjectForm from './ModernProjectForm';
 import ModernPipeline from './ModernPipeline';
+import ModernProjectsGrid from './ModernProjectsGrid';
 import ModernEstimator from './ModernEstimator';
 import ModernProjectEdit from './ModernProjectEdit';
-import { Palette, ArrowLeft } from 'lucide-react';
+import { Palette, ArrowLeft, LayoutGrid, Kanban } from 'lucide-react';
 
 const ModernApp = ({ onSwitchToClassic, user, logout }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
