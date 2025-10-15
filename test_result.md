@@ -418,6 +418,18 @@ frontend:
         agent: "testing"
         comment: "✅ BACKEND VALIDATION COMPREHENSIVE - POST /api/projects validation working perfectly. Rejects invalid data (sale price < purchase price) with 422 status. Accepts valid projects with complete address data. Pydantic validation ensures data integrity. Dynamic calculations (marge_estimee) working correctly on creation and updates."
 
+  - task: "Grid view as primary projects view"
+    implemented: true
+    working: "unknown"
+    file: "ModernProjectsGrid.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "unknown"
+        agent: "main"
+        comment: "NEW FEATURE - Created ModernProjectsGrid.js component as primary view for all projects. Features: card-based grid layout (responsive 3 columns), comprehensive search (name/address), status filter, sort options (date/status/budget/marge), advanced filters panel (budget range, TVA regime), grouped view by status, inline edit/delete actions, stats summary. Integrated toggle between Grid (primary) and Kanban (secondary) views in ModernApp.js with sticky header. Ready for user validation."
+
 
 metadata:
   created_by: "main_agent"
