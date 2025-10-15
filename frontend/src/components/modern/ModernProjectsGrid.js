@@ -224,15 +224,15 @@ const ModernProjectsGrid = ({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-            <div className="flex items-center space-x-2 text-slate-500">
-              <Calendar className="h-4 w-4" />
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div className="flex items-center space-x-1.5 text-slate-500">
+              <Calendar className="h-3.5 w-3.5" />
               <span className="text-xs">{formatDate(project.updated_at || project.created_at)}</span>
             </div>
             
-            <button className="flex items-center space-x-1 text-violet-600 hover:text-violet-700 font-medium text-sm">
-              <Eye className="h-4 w-4" />
-              <span>Voir détail</span>
+            <button className="flex items-center space-x-1 text-violet-600 hover:text-violet-700 font-medium text-xs">
+              <Eye className="h-3.5 w-3.5" />
+              <span>Détails</span>
             </button>
           </div>
         </div>
