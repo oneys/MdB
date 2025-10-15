@@ -181,26 +181,19 @@ const ModernProjectsGrid = ({
           >
             <Trash2 className="h-4 w-4" />
           </button>
+          </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-5">
           {/* Header */}
-          <div className="mb-4">
-            <h3 className="font-bold text-lg text-slate-900 mb-2 pr-20 group-hover:text-violet-600 transition-colors">
+          <div className="mb-3">
+            <h3 className="font-bold text-base text-slate-900 mb-2 group-hover:text-violet-600 transition-colors line-clamp-2">
               {project.label}
             </h3>
             <div className="flex items-start space-x-2 text-slate-600">
-              <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <p className="text-sm">{address}</p>
+              <MapPin className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+              <p className="text-xs line-clamp-1">{address}</p>
             </div>
-          </div>
-
-          {/* Status Badge */}
-          <div className="mb-4">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}>
-              <span className={`w-2 h-2 rounded-full ${statusInfo.color} mr-2`}></span>
-              {statusInfo.label}
-            </span>
           </div>
 
           {/* Financial Metrics */}
