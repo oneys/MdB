@@ -426,6 +426,7 @@ class Project(BaseModel):
 class ProjectCreate(BaseModel):
     label: str = Field(..., min_length=3, max_length=200, pattern=r'^[\w\s\-_\.\,\(\)àâäéèêëïîôöùûüÿçÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ]+$')
     address: Dict[str, str] = Field(default_factory=dict)
+    google_maps_link: Optional[str] = Field(None, max_length=500, description="Lien Google Maps du bien")
     regime_tva: RegimeTVA = RegimeTVA.MARGE
     prix_achat_ttc: float = Field(..., ge=1000, le=50000000, description="Prix d'achat entre 1K€ et 50M€")
     prix_vente_ttc: float = Field(..., ge=1000, le=50000000, description="Prix de vente entre 1K€ et 50M€")
