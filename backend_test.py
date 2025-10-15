@@ -1174,7 +1174,7 @@ def main():
         print("   Check detailed results above for specific failures")
     
     # Return exit code
-    return 0 if creation_success else 1
+    return 0 if (form_success and creation_success) else 1
 
 if __name__ == "__main__":
     sys.exit(main())
