@@ -1145,7 +1145,10 @@ def main():
         return 1
     
     # Focus on project creation testing as requested
-    print("\n🏗️ PHASE 2: PROJECT CREATION COMPREHENSIVE TESTING")
+    print("\n📋 PHASE 2: FRONTEND FORM SIMULATION")
+    form_success = tester.test_frontend_form_simulation()
+    
+    print("\n🏗️ PHASE 3: PROJECT CREATION COMPREHENSIVE TESTING")
     creation_success = tester.test_project_creation_comprehensive()
     
     # Additional API health check
