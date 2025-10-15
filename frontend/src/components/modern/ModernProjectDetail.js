@@ -379,33 +379,74 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
 
                 {/* Google Maps */}
                 <div className="bg-slate-100 rounded-xl h-64 overflow-hidden border border-slate-200">
-                  {project.google_maps_link ? (
-                    <iframe
-                      src={project.google_maps_link.includes('embed') 
-                        ? project.google_maps_link 
-                        : `https://maps.google.com/maps?q=${encodeURIComponent(
-                            typeof project.address === 'string' 
-                              ? project.address 
-                              : `${project.address?.line1 || ''}, ${project.address?.city || ''}`
-                          )}&output=embed`
+                  {(() => {
+                    // Fonction pour convertir n'importe quel lien Google Maps en embed URL
+                    const getEmbedUrl = () => {
+                      const link = project.google_maps_link;
+                      
+                      // Si lien fourni
+                      if (link && link.trim()) {
+                        // Si c'est déjà un lien embed
+                        if (link.includes('embed')) {
+                          return link;
+                        }
+                        // Si c'est un lien maps.app.goo.gl ou goo.gl (lien court)
+                        else if (link.includes('maps.app.goo.gl') || link.includes('goo.gl')) {
+                          // Extraire les coordonnées si possible, sinon utiliser le lien tel quel
+                          return link.replace('maps.app.goo.gl', 'www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d');
+                        }
+                        // Si c'est un lien google.com/maps avec coordonnées
+                        else if (link.includes('google.com/maps') || link.includes('maps.google.com')) {
+                          // Essayer d'extraire les coordonnées
+                          const coordMatch = link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                          if (coordMatch) {
+                            return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&output=embed`;
+                          }
+                          // Sinon, chercher "place/" ou "search/"
+                          const placeMatch = link.match(/place\/([^/]+)/);
+                          if (placeMatch) {
+                            return `https://maps.google.com/maps?q=${encodeURIComponent(placeMatch[1])}&output=embed`;
+                          }
+                          // Dernier recours: utiliser le lien tel quel
+                          return link.replace('/maps/', '/maps/embed/v1/place?key=&q=');
+                        }
                       }
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      allowFullScreen=""
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title="Google Maps"
-                    />
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-2" />
-                        <p className="text-slate-600 font-medium">Carte non disponible</p>
-                        <p className="text-slate-500 text-sm">Ajoutez un lien Google Maps</p>
+                      
+                      // Fallback: utiliser l'adresse du projet
+                      const addressString = typeof project.address === 'string' 
+                        ? project.address 
+                        : `${project.address?.line1 || ''}, ${project.address?.city || ''}, ${project.address?.zipcode || project.dept || ''}`;
+                      
+                      if (addressString && addressString.trim()) {
+                        return `https://maps.google.com/maps?q=${encodeURIComponent(addressString)}&output=embed`;
+                      }
+                      
+                      return null;
+                    };
+                    
+                    const embedUrl = getEmbedUrl();
+                    
+                    return embedUrl ? (
+                      <iframe
+                        src={embedUrl}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen=""
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Google Maps"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="text-center">
+                          <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+                          <p className="text-slate-600 font-medium">Carte non disponible</p>
+                          <p className="text-slate-500 text-sm">Adresse incomplète</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
             </div>
