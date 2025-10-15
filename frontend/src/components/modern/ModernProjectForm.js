@@ -133,6 +133,7 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
             address: '',
             city: '',
             dept: '',
+            google_maps_link: '',
             prix_achat_ttc: '',
             prix_vente_ttc: '',
             travaux_ttc: '',
