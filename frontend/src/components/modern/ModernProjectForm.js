@@ -448,6 +448,26 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Niveau d'avancement
+                  </label>
+                  <select
+                    value={formData.status || 'DETECTE'}
+                    onChange={(e) => handleInputChange('status', e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  >
+                    <option value="DETECTE">Détecté</option>
+                    <option value="OFFRE">Offre</option>
+                    <option value="SOUS_COMPROMIS">Sous compromis</option>
+                    <option value="ACTE_SIGNE">Acte signé</option>
+                    <option value="TRAVAUX">Travaux</option>
+                    <option value="COMMERCIALISATION">Commercialisation</option>
+                    <option value="VENDU">Vendu</option>
+                    <option value="ABANDONNE">Abandonné</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Régime de TVA
                   </label>
                   <select
