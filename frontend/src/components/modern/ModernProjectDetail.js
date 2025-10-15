@@ -361,7 +361,9 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
                     <div className="space-y-2 pt-4">
                       <div className="flex justify-between">
                         <span className="text-slate-600">Département:</span>
-                        <span className="font-medium text-slate-900">{project.dept || 'Non renseigné'}</span>
+                        <span className="font-medium text-slate-900">
+                          {project.address?.zipcode || project.address?.dept || project.dept || 'Non renseigné'}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-600">Régime TVA:</span>
