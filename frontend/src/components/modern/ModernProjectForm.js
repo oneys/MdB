@@ -732,6 +732,22 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
                       <span className="text-slate-600">Département:</span>
                       <p className="font-medium text-slate-900">{formData.dept}</p>
                     </div>
+                    <div>
+                      <span className="text-slate-600">Statut initial:</span>
+                      <p className="font-medium text-slate-900">
+                        {
+                          formData.status === 'DETECTE' ? 'Détecté' :
+                          formData.status === 'OFFRE' ? 'Offre' :
+                          formData.status === 'SOUS_COMPROMIS' ? 'Sous compromis' :
+                          formData.status === 'ACTE_SIGNE' ? 'Acte signé' :
+                          formData.status === 'TRAVAUX' ? 'Travaux' :
+                          formData.status === 'COMMERCIALISATION' ? 'Commercialisation' :
+                          formData.status === 'VENDU' ? 'Vendu' :
+                          formData.status === 'ABANDONNE' ? 'Abandonné' :
+                          'Détecté'
+                        }
+                      </p>
+                    </div>
                     {formData.google_maps_link && (
                       <div className="col-span-2">
                         <span className="text-slate-600">Google Maps:</span>
