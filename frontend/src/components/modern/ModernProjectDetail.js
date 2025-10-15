@@ -117,17 +117,19 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
       </div>
 
       {/* Hero Banner with Project Image */}
-      <div className="relative h-96 bg-gradient-to-r from-violet-600 to-blue-600 overflow-hidden">
-        <img
-          src={projectImages[selectedImage]}
-          alt={project.label}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/40"></div>
+      <div className="relative h-96 bg-gradient-to-r from-violet-600 to-blue-600">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src={projectImages[selectedImage]}
+            alt={project.label}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40"></div>
+        </div>
         
         {/* Project Title Overlay */}
-        <div className="absolute bottom-8 left-8 right-8" style={{ overflow: 'visible' }}>
-          <div className="flex items-end justify-between" style={{ overflow: 'visible' }}>
+        <div className="absolute bottom-8 left-8 right-8 z-10">
+          <div className="flex items-end justify-between">
             <div>
               <h1 className="text-4xl font-bold text-white mb-2">{project.label}</h1>
               <div className="flex items-center text-white/90 text-lg">
