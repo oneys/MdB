@@ -2244,7 +2244,7 @@ app.include_router(api_router)
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://realestate-saas-3.preview.emergentagent.com", "https://realestate-saas-3.preview.emergentagent.com"],
+    allow_origins=["http://localhost:3000", "https://realestate-hub-209.preview.emergentagent.com", "https://realestate-hub-209.preview.emergentagent.com"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=["*"],

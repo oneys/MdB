@@ -5,7 +5,7 @@
 - **Total Tests**: 7
 - **Passed**: 5 (71.4%)
 - **Failed**: 2 (authentication required - expected behavior)
-- **Backend URL**: https://realestate-saas-3.preview.emergentagent.com
+- **Backend URL**: https://realestate-hub-209.preview.emergentagent.com
 
 ## ✅ SUCCESSFUL TESTS
 
