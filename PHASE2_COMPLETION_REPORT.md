@@ -123,7 +123,7 @@
 
 ### Pour tester les nouvelles fonctionnalités :
 
-1. **Accès** : https://realestate-hub-209.preview.emergentagent.com
+1. **Accès** : https://dealflow-tracker-6.preview.emergentagent.com
 2. **Connexion** : "Session Développement (Temporaire)"
 3. **Pipeline** : Onglet "Pipeline" → Drag & Drop projets
 4. **Création** : Bouton "Nouveau Projet" → Formulaire complet

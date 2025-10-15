@@ -112,7 +112,7 @@
 ## 📋 SCRIPT DE RECETTE MANUELLE
 
 **Pour valider l'accès utilisateur :**
-1. Aller sur https://realestate-hub-209.preview.emergentagent.com
+1. Aller sur https://dealflow-tracker-6.preview.emergentagent.com
 2. Cliquer "Continuer avec Google" ou "Continuer avec Microsoft"  
 3. Authentification OAuth → Redirection dashboard
 4. Onglet "Estimateur" → Interface calculateur
