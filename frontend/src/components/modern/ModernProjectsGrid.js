@@ -197,33 +197,27 @@ const ModernProjectsGrid = ({
           </div>
 
           {/* Financial Metrics */}
-          <div className="space-y-3 mb-4">
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <Building className="h-4 w-4 text-slate-500" />
-                <span className="text-sm text-slate-600">Prix d'achat</span>
-              </div>
-              <span className="font-semibold text-slate-900">
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+              <span className="text-xs text-slate-600">Achat</span>
+              <span className="font-semibold text-sm text-slate-900">
                 {formatEuro(project.prix_achat_ttc || 0)}
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <Euro className="h-4 w-4 text-slate-500" />
-                <span className="text-sm text-slate-600">Prix de vente</span>
-              </div>
-              <span className="font-semibold text-slate-900">
+            <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+              <span className="text-xs text-slate-600">Vente</span>
+              <span className="font-semibold text-sm text-slate-900">
                 {formatEuro(project.prix_vente_ttc || 0)}
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-violet-50 to-purple-50 rounded-lg border border-violet-100">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4 text-violet-600" />
-                <span className="text-sm font-medium text-violet-700">Marge nette</span>
+            <div className="flex items-center justify-between p-2 bg-gradient-to-r from-violet-50 to-purple-50 rounded-lg border border-violet-100">
+              <div className="flex items-center space-x-1">
+                <TrendingUp className="h-3.5 w-3.5 text-violet-600" />
+                <span className="text-xs font-medium text-violet-700">Marge</span>
               </div>
-              <span className={`font-bold ${margin > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`font-bold text-sm ${margin > 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatEuro(margin)}
               </span>
             </div>
