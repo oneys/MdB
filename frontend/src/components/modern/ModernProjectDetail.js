@@ -156,25 +156,27 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
             </div>
             
             {/* Status Badge - Clickable Dropdown */}
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative z-50" ref={dropdownRef}>
               <button
-                onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                className={`${currentStatus.bgColor} ${currentStatus.textColor} px-4 py-2 rounded-xl border border-white/20 backdrop-blur-md hover:shadow-lg transition-all cursor-pointer`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowStatusDropdown(!showStatusDropdown);
+                }}
+                className={`${currentStatus.bgColor} ${currentStatus.textColor} px-4 py-2 rounded-xl border border-white/20 backdrop-blur-md hover:shadow-lg transition-all cursor-pointer flex items-center space-x-2`}
               >
-                <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${currentStatus.color}`}></div>
-                  <span className="font-semibold">{currentStatus.label}</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
-                </div>
+                <div className={`w-3 h-3 rounded-full ${currentStatus.color}`}></div>
+                <span className="font-semibold">{currentStatus.label}</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
               </button>
               
               {/* Status Dropdown Menu */}
               {showStatusDropdown && (
-                <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50">
+                <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-[100]">
                   {Object.entries(statusConfig).map(([statusKey, config]) => (
                     <button
                       key={statusKey}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         onProjectStatusUpdate(project.id, statusKey);
                         setShowStatusDropdown(false);
                       }}
