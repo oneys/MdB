@@ -354,7 +354,7 @@ const ModernPipeline = ({ projects, onProjectSelect, onProjectStatusUpdate, onPr
       </div>
 
       {/* Fixed Stats Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-[999]">
         <div className="max-w-7xl mx-auto px-8 py-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
