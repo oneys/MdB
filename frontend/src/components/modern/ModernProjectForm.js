@@ -429,6 +429,22 @@ const ModernProjectForm = ({ onBack, onProjectCreate }) => {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Lien Google Maps (optionnel)
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.google_maps_link || ''}
+                    onChange={(e) => handleInputChange('google_maps_link', e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    placeholder="https://maps.google.com/..."
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Copiez le lien Google Maps de l'adresse du bien
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Régime de TVA
                   </label>
                   <select
