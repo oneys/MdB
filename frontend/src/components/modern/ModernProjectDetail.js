@@ -327,7 +327,163 @@ const ModernProjectDetail = ({ project, onBack, onProjectUpdate, onProjectStatus
               </div>
             </div>
 
-            {/* Address and Map */}
+            {/* Cost Breakdown - MOVED BEFORE LOCALISATION */}
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+              <h2 className="text-xl font-semibold text-slate-900 mb-6">Répartition des coûts</h2>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Pie Chart */}
+                <div className="flex items-center justify-center">
+                  <div className="relative w-56 h-56">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+                      {(() => {
+                        const prixAchat = project.prix_achat_ttc || 0;
+                        const travaux = project.travaux_ttc || 0;
+                        const fraisAgence = project.frais_agence_ttc || 0;
+                        const total = prixAchat + travaux + fraisAgence;
+                        
+                        if (total === 0) return null;
+                        
+                        const prixAchatPercent = (prixAchat / total) * 100;
+                        const travauxPercent = (travaux / total) * 100;
+                        const fraisPercent = (fraisAgence / total) * 100;
+                        
+                        const radius = 80;
+                        const circumference = 2 * Math.PI * radius;
+                        
+                        const prixAchatLength = (prixAchatPercent / 100) * circumference;
+                        const travauxLength = (travauxPercent / 100) * circumference;
+                        const fraisLength = (fraisPercent / 100) * circumference;
+                        
+                        let currentOffset = 0;
+                        
+                        return (
+                          <>
+                            {/* Prix d'achat */}
+                            {prixAchat > 0 && (
+                              <circle
+                                cx="100"
+                                cy="100"
+                                r={radius}
+                                fill="none"
+                                stroke="#3b82f6"
+                                strokeWidth="30"
+                                strokeDasharray={`${prixAchatLength} ${circumference}`}
+                                strokeDashoffset={currentOffset}
+                                className="transition-all duration-1000"
+                              />
+                            )}
+                            
+                            {/* Travaux */}
+                            {travaux > 0 && (() => {
+                              currentOffset -= prixAchatLength;
+                              return (
+                                <circle
+                                  cx="100"
+                                  cy="100"
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#f59e0b"
+                                  strokeWidth="30"
+                                  strokeDasharray={`${travauxLength} ${circumference}`}
+                                  strokeDashoffset={currentOffset}
+                                  className="transition-all duration-1000"
+                                />
+                              );
+                            })()}
+                            
+                            {/* Frais d'agence */}
+                            {fraisAgence > 0 && (() => {
+                              currentOffset -= travauxLength;
+                              return (
+                                <circle
+                                  cx="100"
+                                  cy="100"
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#10b981"
+                                  strokeWidth="30"
+                                  strokeDasharray={`${fraisLength} ${circumference}`}
+                                  strokeDashoffset={currentOffset}
+                                  className="transition-all duration-1000"
+                                />
+                              );
+                            })()}
+                          </>
+                        );
+                      })()}
+                    </svg>
+                    
+                    {/* Center text */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-slate-900">Total</div>
+                        <div className="text-sm text-slate-600">
+                          {formatEuro((project.prix_achat_ttc || 0) + (project.travaux_ttc || 0) + (project.frais_agence_ttc || 0))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend and Details */}
+                <div className="space-y-4">
+                  {/* Prix d'achat */}
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                      <span className="font-medium text-blue-900">Prix d'achat</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-blue-900">{formatEuro(project.prix_achat_ttc || 0)}</div>
+                      <div className="text-xs text-blue-700">
+                        {((project.prix_achat_ttc || 0) / ((project.prix_achat_ttc || 0) + (project.travaux_ttc || 0) + (project.frais_agence_ttc || 0)) * 100 || 0).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Travaux */}
+                  <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 bg-amber-500 rounded-full"></div>
+                      <span className="font-medium text-amber-900">Travaux</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-amber-900">{formatEuro(project.travaux_ttc || 0)}</div>
+                      <div className="text-xs text-amber-700">
+                        {((project.travaux_ttc || 0) / ((project.prix_achat_ttc || 0) + (project.travaux_ttc || 0) + (project.frais_agence_ttc || 0)) * 100 || 0).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Frais d'agence */}
+                  <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 bg-emerald-500 rounded-full"></div>
+                      <span className="font-medium text-emerald-900">Frais d'agence</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-emerald-900">{formatEuro(project.frais_agence_ttc || 0)}</div>
+                      <div className="text-xs text-emerald-700">
+                        {((project.frais_agence_ttc || 0) / ((project.prix_achat_ttc || 0) + (project.travaux_ttc || 0) + (project.frais_agence_ttc || 0)) * 100 || 0).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total avec marge */}
+                  <div className="border-t border-slate-200 pt-4">
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-violet-50 to-blue-50 rounded-xl">
+                      <span className="font-semibold text-slate-900">Prix de vente prévu</span>
+                      <span className="font-bold text-slate-900 text-lg">
+                        {formatEuro(project.prix_vente_ttc || 0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Address and Map - NOW AFTER COST BREAKDOWN */}
             <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-slate-900">Localisation</h2>
